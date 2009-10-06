@@ -74,3 +74,20 @@ int Individual::Fitness() const {
 std::ostream& operator <<(std::ostream& stream, const Individual& i) {
   return stream << i.data_;
 }
+
+void Individual::Crossover(const Individual& one, const Individual& two) {
+  assert(one.target_ == two.target_);
+  assert(one.target_ == target_);
+
+  std::string::const_iterator one_it = one.data_.begin();
+  std::string::const_iterator two_it = two.data_.begin();
+  std::string::iterator my_it = data_.begin();
+
+  while (my_it != data_.end()) {
+    *(my_it) = (rand() % 2) ? *one_it : *two_it;
+
+    my_it ++;
+    one_it ++;
+    two_it ++;
+  }
+}

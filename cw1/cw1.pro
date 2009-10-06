@@ -8,5 +8,7 @@ CONFIG += console
 CONFIG -= app_bundle
 TEMPLATE = app
 SOURCES += main.cpp \
-    individual.cpp
-HEADERS += individual.h
+    individual.cpp \
+    population.cpp
+HEADERS += individual.h \
+    population.h

@@ -1,4 +1,5 @@
 #include "individual.h"
+#include "population.h"
 
 #include <string>
 #include <iostream>
@@ -6,6 +7,11 @@
 
 static const char* kTargetString = "Methinks it is like a weasel";
 static const int kPopulationSize = 500;
+static const bool kCrossover = true;
+
+const Individual& FittestOf(const Individual& one, const Individual& two) {
+  return (one.Fitness() > two.Fitness()) ? one : two;
+}
 
 int main(int argc, char *argv[]) {
   using namespace std;
@@ -14,41 +20,48 @@ int main(int argc, char *argv[]) {
   string target = kTargetString;
 
   // Initialise the population
-  vector<Individual> population;
-  population.reserve(kPopulationSize);
+  Population pop(target, kPopulationSize);
 
-  Individual* fittest = NULL;
-  for (int i=0 ; i<kPopulationSize ; ++i) {
-    Individual individual(target);
-    individual.Init();
-    population.push_back(individual);
+  int max_fitness = pop.Fittest().Fitness();
+  int iteration_count = 0;
 
-    // Keep track of the fittest one
-    if (!fittest || individual.Fitness() >
-                    fittest->Fitness())
-      fittest = &(population.at(i));
-  }
-
-  while (*fittest != target) {
+  while (pop.Fittest() != target) {
     // Pick two potential parents at random
-    Individual& one = population.at(rand() % kPopulationSize);
-    Individual& two = population.at(rand() % kPopulationSize);
+    const Individual& parent1_one = pop[rand() % kPopulationSize];
+    const Individual& parent1_two = pop[rand() % kPopulationSize];
 
-    // Mutate the fitter one
     Individual child(target);
-    child.MutateFrom((one.Fitness() > two.Fitness()) ? one : two);
+    if (kCrossover) {
+      // Pick another two potential parents
+      const Individual& parent2_one = pop[rand() % kPopulationSize];
+      const Individual& parent2_two = pop[rand() % kPopulationSize];
+
+      child.Crossover(FittestOf(parent1_one, parent1_two),
+                      FittestOf(parent2_one, parent2_two));
+      child.Mutate();
+    } else {
+      // Mutate the fitter one
+      child.MutateFrom(FittestOf(parent1_one, parent1_two));
+    }
 
     // Pick two individuals that we might replace
-    one = population.at(rand() % kPopulationSize);
-    two = population.at(rand() % kPopulationSize);
+    int new_index_one = rand() % kPopulationSize;
+    int new_index_two = rand() % kPopulationSize;
 
     // Replace the least fit one
-    ((one.Fitness() > two.Fitness()) ? two : one) = child;
+    if (pop[new_index_one].Fitness() > pop[new_index_two].Fitness())
+      pop.Replace(new_index_two, child);
+    else
+      pop.Replace(new_index_one, child);
 
-    // Was this one fitter than the last fittest?
-    if (child.Fitness() > fittest->Fitness()) {
-      fittest = &((one.Fitness() > two.Fitness()) ? two : one);
-      cout << "New fittest: " << *fittest << endl;
+    // Did the highest fitness of the population change?
+    if (pop.Fittest().Fitness() > max_fitness) {
+      max_fitness = pop.Fittest().Fitness();
+      cout << pop.Fittest() << endl;
     }
+
+    iteration_count ++;
   }
+
+  cout << iteration_count << " iterations" << endl;
 }

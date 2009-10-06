@@ -9,9 +9,11 @@ class Individual {
  public:
   Individual(const std::string& target_);
 
-  void Init();
+  // Initialise the Individual in different ways
+  void Init(); // Random
   void MutateFrom(const Individual& parent);
   void CopyFrom(const Individual& other);
+  void Crossover(const Individual& one, const Individual& two);
 
   int Fitness() const;
   void Mutate();
