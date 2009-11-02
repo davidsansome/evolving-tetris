@@ -1,7 +1,7 @@
 #include <QApplication>
 #include <QtDebug>
 
-#include "individual.h"
+#include "engine.h"
 
 #ifndef QT_NO_DEBUG
 # include <QTest>
@@ -30,8 +30,9 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  Individual i(QSize(10, 20));
-  i.Start();
+
+  Engine e;
+  e.Run();
 
   return 0;
 }

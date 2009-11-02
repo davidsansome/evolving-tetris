@@ -1,91 +1,56 @@
 #include "individual.h"
-#include "tetramino.h"
+#include "tetrisboard.h"
+#include "game.h"
 
 #include <limits>
-#include <math.h>
+#include <algorithm>
 
-Individual::Individual(const QSize& board_height)
-    : board_(board_height)
+Individual::Individual()
+    : weights_(Criteria_Count),
+      has_fitness_(false),
+      fitness_(0)
 {
-  board_.Clear();
-
-  // TODO
-  for (int i=0 ; i<Criteria_Count ; ++i) {
-    weights_ << 1;
-  }
 }
 
-void Individual::Start() {
-  board_.Clear();
-  next_tetramino_ = Tetramino();
-
-  int iterations = 0;
-  while (Step()) {
-    iterations ++;
-    qDebug() << iterations << board_;
-  }
+void Individual::InitRandom() {
+  std::generate(weights_.begin(), weights_.end(),
+                RangeGenerator<int>(-100, 100));
 }
 
-bool Individual::Step() {
-  // Pick the next two tetraminos
-  Tetramino tetramino1(next_tetramino_);
-  Tetramino tetramino2; // Random
+void Individual::MutateFrom(const Individual& parent) {
+  std::generate(weights_.begin(), weights_.end(),
+                MutateGenerator<int>(
+                    1.0 / weights_.count(),
+                    RangeGenerator<int>(-100, 100),
+                    parent.weights_.begin()));
+}
 
-  double best_score = std::numeric_limits<double>::max();
+void Individual::Mutate() {
+  MutateFrom(*this);
+}
 
-  // Best x position and orientation of first and second tetramino
-  int best_x1, best_o1, best_x2, best_o2;
+void Individual::CopyFrom(const Individual& other) {
+  weights_ = other.weights_;
+}
 
-  for (int o1=0 ; o1<Tetramino::kOrientationCount ; ++o1) {
-    int width1 = tetramino1.Size(o1).width();
-    for (int x1=0 ; x1<=board_.Width() - width1 ; ++x1) {
-      TetrisBoard board1(board_.Size());
-      board1.CopyFrom(board_);
+void Individual::Crossover(const Individual& one, const Individual& two) {
+  QVector<int>::const_iterator one_it = one.weights_.begin();
+  QVector<int>::const_iterator two_it = two.weights_.begin();
+  QVector<int>::iterator my_it = weights_.begin();
 
-      // Add this first tetramino to the new board
-      double score1 = Rating(board1, tetramino1, x1, o1);
-      if (isnan(score1))
-        continue;
+  while (my_it != weights_.end()) {
+    *(my_it) = (rand() % 2) ? *one_it : *two_it;
 
-      for (int o2=0 ; o2<Tetramino::kOrientationCount ; ++o2) {
-        int width2 = tetramino2.Size(o2).width();
-        for (int x2=0 ; x2<=board_.Width() - width2 ; ++x2) {
-          TetrisBoard board2(board_.Size());
-          board2.CopyFrom(board1);
-
-          // Add the second tetramino to the board
-          double score2 = Rating(board2, tetramino2, x2, o2);
-          if (isnan(score2))
-            continue;
-
-          // Was this combination better than before?
-          if (score1 + score2 < best_score) {
-            best_score = score1 + score2;
-            best_x1 = x1;
-            best_x2 = x2;
-            best_o1 = o1;
-            best_o2 = o2;
-          }
-        }
-      }
-    }
+    my_it ++;
+    one_it ++;
+    two_it ++;
   }
-
-  if (best_score == std::numeric_limits<double>::max())
-    return false;
-
-  // Apply the best first move to the board
-  int best_y1 = board_.TetraminoHeight(tetramino1, best_x1, best_o1);
-  board_.Add(tetramino1, best_x1, best_y1, best_o1);
-  board_.ClearRows();
-
-  next_tetramino_ = tetramino2;
-
-  return true;
 }
 
 double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
                           int x, int orientation) const {
+  Q_ASSERT(weights_.count() == Criteria_Count);
+
   int y = board.TetraminoHeight(tetramino, x, orientation);
 
   if (y == -1) {
@@ -115,4 +80,19 @@ double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
       weights_[RemovedLines] * removed_lines +
       weights_[AltitudeDifference] * altitude_difference +
       weights_[MaxWellDepth] * max_well_depth;
+}
+
+void Individual::SetFitness(QList<Game*> games) {
+  quint64 running_total = 0;
+
+  foreach (const Game* game, games) {
+    running_total += game->BlocksPlaced();
+  }
+  fitness_ = float(running_total) / games.count();
+  has_fitness_ = true;
+}
+
+QDebug operator<<(QDebug s, const Individual& i) {
+  return s.space() << (i.HasFitness() ? QString::number(i.Fitness()).toAscii().constData() : "??")
+                   << "-" << i.Weights();
 }
