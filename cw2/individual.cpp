@@ -2,6 +2,7 @@
 #include "tetramino.h"
 
 #include <limits>
+#include <math.h>
 
 Individual::Individual(const QSize& board_height)
     : board_(board_height)
@@ -14,7 +15,18 @@ Individual::Individual(const QSize& board_height)
   }
 }
 
-void Individual::Next() {
+void Individual::Start() {
+  board_.Clear();
+  next_tetramino_ = Tetramino();
+
+  int iterations = 0;
+  while (Step()) {
+    iterations ++;
+    qDebug() << iterations << board_;
+  }
+}
+
+bool Individual::Step() {
   // Pick the next two tetraminos
   Tetramino tetramino1(next_tetramino_);
   Tetramino tetramino2; // Random
@@ -32,6 +44,8 @@ void Individual::Next() {
 
       // Add this first tetramino to the new board
       double score1 = Rating(board1, tetramino1, x1, o1);
+      if (isnan(score1))
+        continue;
 
       for (int o2=0 ; o2<Tetramino::kOrientationCount ; ++o2) {
         int width2 = tetramino2.Size(o2).width();
@@ -41,6 +55,8 @@ void Individual::Next() {
 
           // Add the second tetramino to the board
           double score2 = Rating(board2, tetramino2, x2, o2);
+          if (isnan(score2))
+            continue;
 
           // Was this combination better than before?
           if (score1 + score2 < best_score) {
@@ -55,12 +71,17 @@ void Individual::Next() {
     }
   }
 
+  if (best_score == std::numeric_limits<double>::max())
+    return false;
+
   // Apply the best first move to the board
   int best_y1 = TetraminoHeight(board_, tetramino1, best_x1, best_o1);
   board_.Add(tetramino1, best_x1, best_y1, best_o1);
   board_.ClearRows();
 
   next_tetramino_ = tetramino2;
+
+  return true;
 }
 
 double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
@@ -69,7 +90,7 @@ double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
 
   if (y == -1) {
     // We can't add the tetramino here
-    return std::numeric_limits<double>::min();
+    return std::numeric_limits<double>::quiet_NaN();
   }
 
   // Add the tetramino to the board

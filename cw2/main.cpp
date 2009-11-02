@@ -31,10 +31,7 @@ int main(int argc, char** argv) {
 #endif
 
   Individual i(QSize(10, 20));
-  qDebug() << i.Board();
-
-  i.Next();
-  qDebug() << i.Board();
+  i.Start();
 
   return 0;
 }

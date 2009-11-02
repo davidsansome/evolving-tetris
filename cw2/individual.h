@@ -28,13 +28,16 @@ class Individual {
     Criteria_Count
   };
 
-  void Next();
+  void Start();
 
   const TetrisBoard& Board() const { return board_; }
 
  private:
+  bool Step();
+
   double Rating(TetrisBoard& board, const Tetramino& tetramino,
                 int x, int orientation) const;
+  // TODO: Move to TetrisBoard
   int TetraminoHeight(const TetrisBoard& board,
                       const Tetramino& tetramino, int x, int orientation) const;
 
