@@ -120,6 +120,25 @@ void TetrisBoard::Analyse(int* pile_height, int* holes, int* connected_holes,
   *altitude_difference = max_pile_height - *pile_height;
 }
 
+int TetrisBoard::TetraminoHeight(const Tetramino& tetramino,
+                                 int x, int orientation) const {
+  const QSize& size(tetramino.Size(orientation));
+
+  // "Drop" the tetramino
+  for (int y=0 ; y<=Height() - size.height() ; ++y) {
+    // Check to see if any of the points on the tetramino at this position are occupied
+    const QPoint* point = tetramino.Points(orientation);
+    for (int i=0 ; i<Tetramino::kPointsCount ; ++i) {
+      // If any point is occupied, return the previous y coord
+      if (Cell(x + point->x(), y + point->y())) {
+        return y - 1;
+      }
+      point++;
+    }
+  }
+  return Height() - size.height();
+}
+
 QDebug operator<<(QDebug s, const TetrisBoard& b) {
   s.nospace() << "TetrisBoard(" << b.Width() << "x" << b.Height() << ")\n";
 
@@ -133,3 +152,4 @@ QDebug operator<<(QDebug s, const TetrisBoard& b) {
 
   return s.space();
 }
+

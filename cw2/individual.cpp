@@ -75,7 +75,7 @@ bool Individual::Step() {
     return false;
 
   // Apply the best first move to the board
-  int best_y1 = TetraminoHeight(board_, tetramino1, best_x1, best_o1);
+  int best_y1 = board_.TetraminoHeight(tetramino1, best_x1, best_o1);
   board_.Add(tetramino1, best_x1, best_y1, best_o1);
   board_.ClearRows();
 
@@ -86,7 +86,7 @@ bool Individual::Step() {
 
 double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
                           int x, int orientation) const {
-  int y = TetraminoHeight(board, tetramino, x, orientation);
+  int y = board.TetraminoHeight(tetramino, x, orientation);
 
   if (y == -1) {
     // We can't add the tetramino here
@@ -115,23 +115,4 @@ double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
       weights_[RemovedLines] * removed_lines +
       weights_[AltitudeDifference] * altitude_difference +
       weights_[MaxWellDepth] * max_well_depth;
-}
-
-int Individual::TetraminoHeight(const TetrisBoard& board,
-                                const Tetramino& tetramino, int x, int orientation) const {
-  const QSize& size(tetramino.Size(orientation));
-
-  // "Drop" the tetramino
-  for (int y=0 ; y<=board.Height() - size.height() ; ++y) {
-    // Check to see if any of the points on the tetramino at this position are occupied
-    const QPoint* point = tetramino.Points(orientation);
-    for (int i=0 ; i<Tetramino::kPointsCount ; ++i) {
-      // If any point is occupied, return the previous y coord
-      if (board(x + point->x(), y + point->y())) {
-        return y - 1;
-      }
-      point++;
-    }
-  }
-  return board.Height() - size.height();
 }

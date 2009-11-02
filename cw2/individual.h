@@ -37,9 +37,6 @@ class Individual {
 
   double Rating(TetrisBoard& board, const Tetramino& tetramino,
                 int x, int orientation) const;
-  // TODO: Move to TetrisBoard
-  int TetraminoHeight(const TetrisBoard& board,
-                      const Tetramino& tetramino, int x, int orientation) const;
 
   QList<int> weights_;
   QList<double> exponents_;

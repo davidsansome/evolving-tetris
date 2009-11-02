@@ -21,6 +21,8 @@ class TetrisBoard {
   int Width() const { return size_.width(); }
   int Height() const { return size_.height(); }
 
+  int TetraminoHeight(const Tetramino& tetramino, int x, int orientation) const;
+
   void Analyse(int* pile_height, int* holes, int* connected_holes,
                int* altitude_difference, int* max_well_depth) const;
 
