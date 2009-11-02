@@ -32,7 +32,6 @@ void Individual::Next() {
 
       // Add this first tetramino to the new board
       double score1 = Rating(board1, tetramino1, x1, o1);
-      qDebug() << board1;
 
       for (int o2=0 ; o2<Tetramino::kOrientationCount ; ++o2) {
         int width2 = tetramino2.Size(o2).width();

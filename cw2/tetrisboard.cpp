@@ -98,16 +98,23 @@ void TetrisBoard::Analyse(int* pile_height, int* holes, int* connected_holes,
       } else {
         if (!Cell(x, y)) {
           // We're in a hole
-          *holes ++;
+          (*holes) ++;
 
           // If the one above wasn't a hole as well then this is a new unique
           // connected hole
           if (y > 0 && Cell(x, y-1)) {
-            *connected_holes ++;
+            (*connected_holes) ++;
           }
         }
       }
     }
+
+    if (from_top) {
+      // We've got to the bottom without hitting anything
+      max_pile_height = Height();
+    }
+
+    *max_well_depth = qMax(*max_well_depth, well_depth);
   }
 
   *altitude_difference = max_pile_height - *pile_height;

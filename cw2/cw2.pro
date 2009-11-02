@@ -12,3 +12,12 @@ HEADERS += individual.h \
     tetramino.h
 FORMS += 
 RESOURCES += data.qrc
+
+
+CONFIG(debug, debug|release) {
+  QT += testlib
+  SOURCES += test_board.cpp
+  HEADERS += test_board.h
+  QMAKE_POST_LINK = ./cw2 t
+}
+
