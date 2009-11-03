@@ -2,8 +2,12 @@
 #define INDIVIDUAL_H
 
 #include <QVector>
+#include <QtDebug>
 
 #include <cstdlib>
+#include <boost/random/variate_generator.hpp>
+#include <boost/random/normal_distribution.hpp>
+#include <boost/random/mersenne_twister.hpp>
 
 class TetrisBoard;
 class Tetramino;
@@ -52,12 +56,20 @@ class Individual {
   bool HasFitness() const { return has_fitness_; }
   quint64 Fitness() const { return fitness_; }
 
+  bool operator ==(const Individual& other) const;
+
  private:
   QVector<int> weights_;
   QVector<double> exponents_;
   QVector<double> displacements_;
   bool has_fitness_;
   quint64 fitness_;
+
+  typedef boost::variate_generator<
+      boost::mt19937, boost::normal_distribution<double> > RandomGenType;
+  static RandomGenType* sRandomGen;
+
+  static const double kStandardDeviation;
 
   template <typename T>
   class RangeGenerator {
@@ -75,16 +87,11 @@ class Individual {
    public:
     typedef typename QVector<T>::const_iterator iterator_type;
 
-    MutateGenerator(double mutation_probability, RangeGenerator<T> range_gen,
-                    iterator_type original_it)
-        : mutation_probability_(mutation_probability),
-          range_gen_(range_gen),
-          original_it_(original_it) {}
+    MutateGenerator(iterator_type original_it)
+        : original_it_(original_it) {}
     T operator()();
 
    private:
-    double mutation_probability_;
-    RangeGenerator<T> range_gen_;
     iterator_type original_it_;
   };
 };
@@ -98,13 +105,7 @@ T Individual::RangeGenerator<T>::operator()() const {
 
 template <typename T>
 T Individual::MutateGenerator<T>::operator()() {
-  T original = *(original_it_++);
-
-  if (float(qrand()) / RAND_MAX < mutation_probability_) {
-    return range_gen_();
-  } else {
-    return original;
-  }
+  return double(*(original_it_++)) * (*sRandomGen)();
 }
 
 #endif // INDIVIDUAL_H

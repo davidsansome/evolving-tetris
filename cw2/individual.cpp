@@ -5,11 +5,18 @@
 #include <limits>
 #include <algorithm>
 
+const double Individual::kStandardDeviation = 0.3;
+Individual::RandomGenType* Individual::sRandomGen = NULL;
+
 Individual::Individual()
     : weights_(Criteria_Count),
       has_fitness_(false),
       fitness_(0)
 {
+  if (!sRandomGen) {
+    sRandomGen = new RandomGenType(
+        boost::mt19937(), boost::normal_distribution<double>(1.0, kStandardDeviation));
+  }
 }
 
 void Individual::InitRandom() {
@@ -19,10 +26,7 @@ void Individual::InitRandom() {
 
 void Individual::MutateFrom(const Individual& parent) {
   std::generate(weights_.begin(), weights_.end(),
-                MutateGenerator<int>(
-                    1.0 / weights_.count(),
-                    RangeGenerator<int>(-100, 100),
-                    parent.weights_.begin()));
+                MutateGenerator<int>(parent.weights_.begin()));
 }
 
 void Individual::Mutate() {
@@ -90,6 +94,14 @@ void Individual::SetFitness(QList<Game*> games) {
   }
   fitness_ = float(running_total) / games.count();
   has_fitness_ = true;
+}
+
+bool Individual::operator ==(const Individual& other) const {
+  if (!has_fitness_ || !other.has_fitness_)
+    return false;
+  if (fitness_ != other.fitness_)
+    return false;
+  return weights_ == other.weights_;
 }
 
 QDebug operator<<(QDebug s, const Individual& i) {
