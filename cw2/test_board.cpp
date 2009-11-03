@@ -104,7 +104,7 @@ void Board::PileHeight() {
   int pile_height, b, c, d, e;
 
   board_->Analyse(&pile_height, &b, &c, &d, &e);
-  QCOMPARE(pile_height, 1);
+  QCOMPARE(pile_height, 3);
 
   // Knock off the top one
   board_->Cell(1,1) = false;

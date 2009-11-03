@@ -5,9 +5,10 @@
 
 QPoint* Tetramino::data_ = NULL;
 QSize* Tetramino::size_ = NULL;
+int* Tetramino::orientation_count_ = NULL;
 
 const int Tetramino::kTypeCount = 7;
-const int Tetramino::kOrientationCount = 4;
+const int Tetramino::kMaxOrientationCount = 4;
 const int Tetramino::kBlockSize = 4;
 const int Tetramino::kPointsCount = 4;
 
@@ -29,15 +30,18 @@ void Tetramino::Init() {
     QImage image(":/data/tetraminos.png");
     Q_ASSERT(!image.isNull());
     Q_ASSERT(image.width() == kTypeCount * kBlockSize);
-    Q_ASSERT(image.height() == kOrientationCount * kBlockSize);
+    Q_ASSERT(image.height() == kMaxOrientationCount * kBlockSize);
 
     // Allocate the data
-    data_ = new QPoint[kTypeCount * kOrientationCount * kPointsCount];
-    size_ = new QSize[kTypeCount * kOrientationCount];
+    data_ = new QPoint[kTypeCount * kMaxOrientationCount * kPointsCount];
+    size_ = new QSize[kTypeCount * kMaxOrientationCount];
+    orientation_count_ = new int[kTypeCount];
 
     // Read the data from the image
     for (int type=0 ; type<kTypeCount ; ++type) {
-      for (int orientation=0 ; orientation<kOrientationCount ; ++orientation) {
+      orientation_count_[type] = 0;
+
+      for (int orientation=0 ; orientation<kMaxOrientationCount ; ++orientation) {
         QList<QPoint> points;
         int max_x = 0;
         int max_y = 0;
@@ -54,6 +58,11 @@ void Tetramino::Init() {
             }
           }
         }
+
+        if (points.count() == 0)
+          break;
+
+        orientation_count_[type] ++;
 
         Q_ASSERT(points.count() == kPointsCount);
         for (int i=0 ; i<kPointsCount ; ++i) {
