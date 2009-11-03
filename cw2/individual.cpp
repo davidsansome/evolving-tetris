@@ -53,7 +53,7 @@ double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
 
   int y = board.TetraminoHeight(tetramino, x, orientation);
 
-  if (y == -1) {
+  if (y < 0) {
     // We can't add the tetramino here
     return std::numeric_limits<double>::quiet_NaN();
   }

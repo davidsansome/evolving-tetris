@@ -26,6 +26,8 @@ class Board : public QObject {
   void AltitudeDifference();
   void WellDepth();
 
+  void TetraminoHeight();
+
  private:
   TetrisBoard* board_;
 };

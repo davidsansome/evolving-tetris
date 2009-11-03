@@ -19,13 +19,16 @@ HEADERS += individual.h \
 FORMS += 
 RESOURCES += data.qrc
 
-# google-perftools
-LIBS += -lprofiler
 CONFIG(debug, debug|release) { 
     # Testing
     QT += testlib
     SOURCES += test_board.cpp
     HEADERS += test_board.h
-    QMAKE_POST_LINK = ./cw2 \
-        t
+    QMAKE_POST_LINK = ./cw2 t
+}
+
+# google-perftools
+LIBS += -lprofiler
+CONFIG(release) {
+    QMAKE_CXXFLAGS += -g
 }

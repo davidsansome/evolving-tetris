@@ -7,6 +7,7 @@
 class Tetramino {
  public:
   Tetramino();
+  Tetramino(int type);
 
   int Type() const { return type_; }
   const QPoint* Points(int orientation) const { return DataOffset(type_, orientation, 0); }
@@ -18,6 +19,8 @@ class Tetramino {
   static const int kPointsCount;
 
  private:
+  void Init();
+
   inline QPoint* DataOffset(int type, int orientation, int i) const;
   inline QSize& SizeOffset(int type, int orientation) const;
 

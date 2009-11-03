@@ -14,6 +14,16 @@ const int Tetramino::kPointsCount = 4;
 Tetramino::Tetramino()
     : type_(qrand() % kTypeCount)
 {
+  Init();
+}
+
+Tetramino::Tetramino(int type)
+    : type_(type)
+{
+  Init();
+}
+
+void Tetramino::Init() {
   if (data_ == NULL) {
     // Open the image containing tetramino data
     QImage image(":/data/tetraminos.png");

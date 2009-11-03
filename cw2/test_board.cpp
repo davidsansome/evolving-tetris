@@ -1,5 +1,6 @@
 #include "test_board.h"
 #include "tetrisboard.h"
+#include "tetramino.h"
 
 #include <QTest>
 
@@ -218,6 +219,84 @@ void Board::WellDepth() {
 
   board_->Analyse(&a, &b, &c, &d, &well_depth);
   QCOMPARE(well_depth, 3);
+}
+
+void Board::TetraminoHeight() {
+  // Type 5 is:
+  //  XXX
+  //   X
+  Tetramino tetramino(5);
+
+  // 3x2 orientations
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 0), 2);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 2), 2);
+
+  // 2x3 orientations
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 1), 1);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 3), 1);
+
+  board_->Add(tetramino, 0, 2, 0);
+  // ____
+  // ____
+  // _X__
+  // XXX_
+
+  // Type 3 is the square
+  tetramino = Tetramino(3);
+
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 0), 0);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 1, 0), 0);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 2, 0), 1);
+
+  board_->Add(tetramino, 1, 0, 0);
+  // _XX_
+  // _XX_
+  // _X__
+  // XXX_
+
+  // Type 0 is the line
+  tetramino = Tetramino(0);
+
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 0), -1);
+
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 1), -1);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 1, 1), -4);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 2, 1), -4);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 3, 1), 0);
+
+  board_->Add(tetramino, 3, 0, 1);
+  // _XXX
+  // _XXX
+  // _X_X
+  // XXXX
+
+  QCOMPARE(board_->ClearRows(), 1);
+  // ____
+  // _XXX
+  // _XXX
+  // _X_X
+
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 1), 0);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 1, 1), -3);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 2, 1), -3);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 3, 1), -3);
+
+  board_->Add(tetramino, 0, 0, 1);
+  // X___
+  // XXXX
+  // XXXX
+  // XX_X
+
+  QCOMPARE(board_->ClearRows(), 2);
+  // ____
+  // ____
+  // X___
+  // XX_X
+
+  QCOMPARE(board_->TetraminoHeight(tetramino, 0, 1), -2);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 1, 1), -1);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 2, 1), 0);
+  QCOMPARE(board_->TetraminoHeight(tetramino, 3, 1), -1);
 }
 
 } // namespace Test
