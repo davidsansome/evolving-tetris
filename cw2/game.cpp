@@ -15,6 +15,7 @@ Game::Game(Individual& individual, const QSize& board_size)
 }
 
 void Game::Play() {
+  // Each game is played in its own thread
   qsrand(time(NULL) + QThread::currentThreadId());
 
   board_.Clear();

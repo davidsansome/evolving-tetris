@@ -12,9 +12,12 @@ class Game {
  public:
   Game(Individual& individual, const QSize& board_size);
 
+  Individual& GetIndividual() const { return individual_; }
+
+  // Plays a game of tetris, finishing when there's no room for any more blocks
   void Play();
 
-  Individual& GetIndividual() const { return individual_; }
+  // The number of blocks that we managed to place.  The more the better
   quint64 BlocksPlaced() const { return blocks_placed_; }
 
  private:

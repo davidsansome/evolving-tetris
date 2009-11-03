@@ -40,6 +40,10 @@ void TetrisBoard::CopyFrom(const TetrisBoard& other) {
 }
 
 void TetrisBoard::Add(const Tetramino& tetramino, int x, int y, int orientation) {
+  Q_ASSERT(x + tetramino.Size(orientation).width() <= width_);
+  Q_ASSERT(y + tetramino.Size(orientation).height() <= height_);
+  Q_ASSERT(x >= 0 && y >= 0);
+
   const QPoint* point = tetramino.Points(orientation);
   for (int i=0 ; i<Tetramino::kPointsCount ; ++i) {
     const int px = x + point->x();
@@ -62,6 +66,7 @@ int TetrisBoard::ClearRows() {
   bool* row_start = cells_;
   bool* row_end = row_start + width_;
 
+  // For each row...
   for ( ; row_start != cells_end_ ; row_start = row_end, row_end += width_) {
     // Decide whether we need to clear the row
     if (std::find(row_start, row_end, false) != row_end)
@@ -95,6 +100,7 @@ void TetrisBoard::Analyse(int* pile_height, int* holes, int* connected_holes,
                           int* altitude_difference, int* max_well_depth) const {
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
+  // Initialise the output variables
   *pile_height = height_ - *std::min_element(highest_cell_, highest_cell_end_);
   *holes = 0;
   *connected_holes = 0;
@@ -103,9 +109,12 @@ void TetrisBoard::Analyse(int* pile_height, int* holes, int* connected_holes,
 
   int max_pile_height = height_ - *std::max_element(highest_cell_, highest_cell_end_);
 
+  // For each column...
   for (int x=0 ; x<width_ ; ++x) {
     int well_depth;
 
+    // A well is a narrow 1-cell wide hole that is open from the top.
+    // Special cases for the edges of the board.
     if (x == 0) {
       well_depth = highest_cell_[x] - highest_cell_[1];
     } else if (x == width_-1) {
@@ -116,6 +125,8 @@ void TetrisBoard::Analyse(int* pile_height, int* holes, int* connected_holes,
 
     *max_well_depth = qMax(*max_well_depth, well_depth);
 
+    // Start at the highest filled cell and go down.  Keep track of the cell
+    // above us.
     bool cell_above = true;
     for (int y=highest_cell_[x]+1 ; y<height_ ; ++y) {
       bool cell = Cell(x, y);

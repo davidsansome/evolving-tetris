@@ -56,6 +56,8 @@ class Individual {
   bool HasFitness() const { return has_fitness_; }
   quint64 Fitness() const { return fitness_; }
 
+  // Compares the fitness and weights.  Will always return false unless both
+  // have a fitness (to implement "invalid" default constructed values).
   bool operator ==(const Individual& other) const;
 
  private:
@@ -71,6 +73,10 @@ class Individual {
 
   static const double kStandardDeviation;
 
+  // These generators are compatiable with std::generate from <algorithms>.
+  // They are used to set new values for an individual.
+
+  // Generates random numbers from a range.
   template <typename T>
   class RangeGenerator {
    public:
@@ -82,6 +88,8 @@ class Individual {
     T range_;
   };
 
+  // Mutates each value by multiplying it by a normally distributed random
+  // number with mean = 1.0 and kStandardDeviation.
   template <typename T>
   class MutateGenerator {
    public:
