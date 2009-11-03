@@ -95,13 +95,13 @@ void TetrisBoard::Analyse(int* pile_height, int* holes, int* connected_holes,
                           int* altitude_difference, int* max_well_depth) const {
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
-  *pile_height = *std::min_element(highest_cell_, highest_cell_end_);
+  *pile_height = height_ - *std::min_element(highest_cell_, highest_cell_end_);
   *holes = 0;
   *connected_holes = 0;
   *altitude_difference = 0;
   *max_well_depth = 0;
 
-  int max_pile_height = *std::max_element(highest_cell_, highest_cell_end_);
+  int max_pile_height = height_ - *std::max_element(highest_cell_, highest_cell_end_);
 
   for (int x=0 ; x<width_ ; ++x) {
     int well_depth;
@@ -133,7 +133,7 @@ void TetrisBoard::Analyse(int* pile_height, int* holes, int* connected_holes,
     }
   }
 
-  *altitude_difference = max_pile_height - *pile_height;
+  *altitude_difference = *pile_height - max_pile_height;
 }
 
 int TetrisBoard::TetraminoHeight(const Tetramino& tetramino,

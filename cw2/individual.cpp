@@ -5,7 +5,7 @@
 #include <limits>
 #include <algorithm>
 
-const double Individual::kStandardDeviation = 0.3;
+const double Individual::kStandardDeviation = 0.2;
 Individual::RandomGenType* Individual::sRandomGen = NULL;
 
 Individual::Individual()
@@ -21,7 +21,7 @@ Individual::Individual()
 
 void Individual::InitRandom() {
   std::generate(weights_.begin(), weights_.end(),
-                RangeGenerator<int>(-100, 100));
+                RangeGenerator<int>(-1000, 1000));
 }
 
 void Individual::MutateFrom(const Individual& parent) {

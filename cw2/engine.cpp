@@ -5,10 +5,9 @@
 #include <QtConcurrentMap>
 #include <QtDebug>
 
-const QSize Engine::kBoardSize(10, 20);
-const int Engine::kPopulationSize = 10;
-const int Engine::kGamesToRun = 10;
-const bool Engine::kCrossover = true;
+const QSize Engine::kBoardSize(6, 12);
+const int Engine::kPopulationSize = 256;
+const int Engine::kGamesToRun = 12;
 
 Engine::Engine()
     : pop_(kPopulationSize)
@@ -87,7 +86,6 @@ void Engine::UpdateFitness() {
   // Update the fitness for each one
   foreach (int individual, games_for_individual.uniqueKeys()) {
     pop_[individual].SetFitness(games_for_individual.values(individual));
-    qDebug() << pop_[individual];
   }
 
   qDeleteAll(games);
