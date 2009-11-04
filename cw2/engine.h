@@ -20,6 +20,7 @@ class Engine {
   static const QSize kBoardSize;
   static const int kPopulationSize;
   static const int kGamesToRun;
+  static const int kMaxGenerations;
 
   // Functor for using QtConcurrentMap with object pointers
   template <typename T, typename C>

@@ -23,6 +23,19 @@ Individual& Population::Fittest() {
       individuals_.begin(), individuals_.end(), CompareFitness()));
 }
 
+Individual& Population::LeastFit() {
+  return *(std::min_element(
+      individuals_.begin(), individuals_.end(), CompareFitness()));
+}
+
+quint64 Population::MeanFitness() const {
+  quint64 total_fitness = 0;
+  foreach (const Individual& i, individuals_) {
+    total_fitness += i.Fitness();
+  }
+  return total_fitness / individuals_.count();
+}
+
 Individual& Population::SelectFitnessProportionate(const Individual& excluding) {
   // This is really nasty
 

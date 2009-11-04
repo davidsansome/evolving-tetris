@@ -60,6 +60,8 @@ class Individual {
   // have a fitness (to implement "invalid" default constructed values).
   bool operator ==(const Individual& other) const;
 
+  static const double kStandardDeviation;
+
  private:
   QVector<int> weights_;
   QVector<double> exponents_;
@@ -70,8 +72,6 @@ class Individual {
   typedef boost::variate_generator<
       boost::mt19937, boost::normal_distribution<double> > RandomGenType;
   static RandomGenType* sRandomGen;
-
-  static const double kStandardDeviation;
 
   // These generators are compatiable with std::generate from <algorithms>.
   // They are used to set new values for an individual.

@@ -12,8 +12,11 @@ class Population {
   void InitRandom();
 
   Individual& operator[](int i) { return individuals_[i]; }
-  Individual& Fittest();
   Individual& SelectFitnessProportionate(const Individual& excluding = Individual());
+
+  Individual& Fittest();
+  Individual& LeastFit();
+  quint64 MeanFitness() const;
 
   void Replace(int i, const Individual& replacement);
 

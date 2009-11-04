@@ -5,9 +5,15 @@
 #include <QtConcurrentMap>
 #include <QtDebug>
 
+#include <iostream>
+
+using std::cout;
+using std::endl;
+
 const QSize Engine::kBoardSize(6, 12);
 const int Engine::kPopulationSize = 256;
 const int Engine::kGamesToRun = 12;
+const int Engine::kMaxGenerations = 30;
 
 Engine::Engine()
     : pop_(kPopulationSize)
@@ -19,20 +25,29 @@ const Individual& Engine::FittestOf(const Individual& one, const Individual& two
 }
 
 void Engine::Run() {
-  int generation_count = 0;
-  quint64 max_fitness = 0;
-
   pop_.InitRandom();
 
-  forever {
+  cout << "# Population size " << kPopulationSize << endl;
+  cout << "# Games " << kGamesToRun << endl;
+  cout << "# Board size " << kBoardSize.width() << "x" << kBoardSize.height() << endl;
+  cout << "# Mutation std dev " << Individual::kStandardDeviation << endl;
+  cout << "# Running for " << kMaxGenerations << " generations" << endl;
+
+  for (int generation_count=0 ; generation_count<kMaxGenerations ; ++generation_count) {
     // Play games to get the fitness of new individuals
     UpdateFitness();
 
-    // Did the highest fitness of the population change?
-    if (pop_.Fittest().Fitness() > max_fitness) {
-      max_fitness = pop_.Fittest().Fitness();
-      qDebug() << "After" << generation_count << "generations, fittest is" << pop_.Fittest();
-    }
+    // Show output
+    cout << generation_count << "\t" <<
+            pop_.Fittest().Fitness() << "\t" <<
+            pop_.MeanFitness() << "\t" <<
+            pop_.LeastFit().Fitness() << "\t" <<
+            pop_.Fittest().Weights()[0] << "\t" <<
+            pop_.Fittest().Weights()[1] << "\t" <<
+            pop_.Fittest().Weights()[2] << "\t" <<
+            pop_.Fittest().Weights()[3] << "\t" <<
+            pop_.Fittest().Weights()[4] << "\t" <<
+            pop_.Fittest().Weights()[5] << endl;
 
     // Make a new population
     Population pop2(kPopulationSize);
@@ -53,8 +68,6 @@ void Engine::Run() {
 
     // Use the new population
     pop_ = pop2;
-
-    generation_count ++;
   }
 }
 
