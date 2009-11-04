@@ -10,7 +10,6 @@
 using std::cout;
 using std::endl;
 
-const QSize Engine::kBoardSize(6, 12);
 const int Engine::kPopulationSize = 256;
 const int Engine::kGamesToRun = 12;
 const int Engine::kMaxGenerations = 30;
@@ -27,11 +26,17 @@ const Individual& Engine::FittestOf(const Individual& one, const Individual& two
 void Engine::Run() {
   pop_.InitRandom();
 
+  QSize board_size(GameType::BoardType().Size());
+
   cout << "# Population size " << kPopulationSize << endl;
   cout << "# Games " << kGamesToRun << endl;
-  cout << "# Board size " << kBoardSize.width() << "x" << kBoardSize.height() << endl;
+  cout << "# Board size " << board_size.width() << "x" << board_size.height() << endl;
   cout << "# Mutation std dev " << Individual::kStandardDeviation << endl;
   cout << "# Running for " << kMaxGenerations << " generations" << endl;
+
+#ifndef QT_NO_DEBUG
+  cout << "# Running in debug mode with assertions enabled" << endl;
+#endif
 
   for (int generation_count=0 ; generation_count<kMaxGenerations ; ++generation_count) {
     // Play games to get the fitness of new individuals
@@ -73,8 +78,8 @@ void Engine::Run() {
 
 void Engine::UpdateFitness() {
   // Create games
-  QList<Game*> games;
-  QMap<int, Game*> games_for_individual;
+  QList<GameType*> games;
+  QMap<int, GameType*> games_for_individual;
 
   for (int i = 0 ; i < kPopulationSize ; ++i) {
     Individual& individual = pop_[i];
@@ -82,7 +87,7 @@ void Engine::UpdateFitness() {
       continue;
 
     for (int j = 0 ; j < kGamesToRun ; ++j) {
-      Game* game = new Game(individual, kBoardSize);
+      GameType* game = new GameType(individual);
       games << game;
       games_for_individual.insertMulti(i, game);
     }
@@ -93,12 +98,17 @@ void Engine::UpdateFitness() {
 
   // Run games
   QFuture<void> future = QtConcurrent::map(
-      games, PointerMemberFunctionWrapper<void, Game>(&Game::Play));
+      games, PointerMemberFunctionWrapper<void, GameType>(&GameType::Play));
   future.waitForFinished();
 
   // Update the fitness for each one
   foreach (int individual, games_for_individual.uniqueKeys()) {
-    pop_[individual].SetFitness(games_for_individual.values(individual));
+    QList<quint64> scores;
+    foreach (const GameType* game, games_for_individual.values(individual)) {
+      scores << game->BlocksPlaced();
+    }
+
+    pop_[individual].SetFitness(scores);
   }
 
   qDeleteAll(games);

@@ -9,9 +9,9 @@
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
 
-class TetrisBoard;
+#include "tetrisboard.h"
+
 class Tetramino;
-class Game;
 
 class Individual {
  public:
@@ -48,11 +48,12 @@ class Individual {
 
   // Adds the given tetramino to this board and computes a score based on
   // this individual's weightings
-  double Rating(TetrisBoard& board, const Tetramino& tetramino,
+  template <int W, int H>
+  double Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
                 int x, int orientation) const;
 
   // Sets this individual's fitness from the results of some games
-  void SetFitness(QList<Game*> games);
+  void SetFitness(QList<quint64> games);
   bool HasFitness() const { return has_fitness_; }
   quint64 Fitness() const { return fitness_; }
 
@@ -114,6 +115,42 @@ T Individual::RangeGenerator<T>::operator()() const {
 template <typename T>
 T Individual::MutateGenerator<T>::operator()() {
   return double(*(original_it_++)) * (*sRandomGen)();
+}
+
+template <int W, int H>
+double Individual::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
+                          int x, int orientation) const {
+  Q_ASSERT(weights_.count() == Criteria_Count);
+
+  int y = board.TetraminoHeight(tetramino, x, orientation);
+
+  if (y < 0) {
+    // We can't add the tetramino here
+    return std::numeric_limits<double>::quiet_NaN();
+  }
+
+  // Add the tetramino to the board
+  board.Add(tetramino, x, y, orientation);
+
+  // Count the rows that were removed by adding this tetramino
+  int removed_lines = board.ClearRows();
+
+  int pile_height;
+  int holes;
+  int connected_holes;
+  int altitude_difference;
+  int max_well_depth;
+
+  board.Analyse(&pile_height, &holes, &connected_holes,
+                &altitude_difference, &max_well_depth);
+
+  return
+      weights_[PileHeight] * pile_height +
+      weights_[Holes] * holes +
+      weights_[ConnectedHoles] * connected_holes +
+      weights_[RemovedLines] * removed_lines +
+      weights_[AltitudeDifference] * altitude_difference +
+      weights_[MaxWellDepth] * max_well_depth;
 }
 
 #endif // INDIVIDUAL_H

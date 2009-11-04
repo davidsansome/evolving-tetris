@@ -12,7 +12,7 @@ Board::Board()
 }
 
 void Board::init() {
-  board_ = new TetrisBoard(QSize(4, 4));
+  board_ = new BoardType;
   board_->Clear();
 }
 

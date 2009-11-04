@@ -3,7 +3,7 @@
 
 #include <QObject>
 
-class TetrisBoard;
+#include "tetrisboard.h"
 
 namespace Test {
 
@@ -12,6 +12,8 @@ class Board : public QObject {
 
  public:
   Board();
+
+  typedef TetrisBoard<4, 4> BoardType;
 
  private slots:
   void init();
@@ -29,7 +31,7 @@ class Board : public QObject {
   void TetraminoHeight();
 
  private:
-  TetrisBoard* board_;
+  BoardType* board_;
 };
 
 } // namespace Test

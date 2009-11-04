@@ -4,10 +4,13 @@
 #include <QSize>
 
 #include "population.h"
+#include "game.h"
 
 class Engine {
  public:
   Engine();
+
+  typedef Game<8, 16> GameType;
 
   void Run();
 
@@ -17,7 +20,6 @@ class Engine {
 
   Population pop_;
 
-  static const QSize kBoardSize;
   static const int kPopulationSize;
   static const int kGamesToRun;
   static const int kMaxGenerations;

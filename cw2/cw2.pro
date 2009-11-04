@@ -5,9 +5,7 @@ TARGET = cw2
 TEMPLATE = app
 SOURCES += main.cpp \
     individual.cpp \
-    tetrisboard.cpp \
     tetramino.cpp \
-    game.cpp \
     engine.cpp \
     population.cpp
 HEADERS += individual.h \
@@ -18,17 +16,15 @@ HEADERS += individual.h \
     population.h
 FORMS += 
 RESOURCES += data.qrc
-
 CONFIG(debug, debug|release) { 
     # Testing
     QT += testlib
     SOURCES += test_board.cpp
     HEADERS += test_board.h
-    QMAKE_POST_LINK = ./cw2 t
+    QMAKE_POST_LINK = ./cw2 \
+        t
 }
 
 # google-perftools
 LIBS += -lprofiler
-CONFIG(release) {
-    QMAKE_CXXFLAGS += -g
-}
+CONFIG(release):QMAKE_CXXFLAGS += -g

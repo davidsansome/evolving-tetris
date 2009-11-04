@@ -5,7 +5,7 @@
 #include <limits>
 #include <algorithm>
 
-const double Individual::kStandardDeviation = 0.2;
+const double Individual::kStandardDeviation = 0.1;
 Individual::RandomGenType* Individual::sRandomGen = NULL;
 
 Individual::Individual()
@@ -51,46 +51,11 @@ void Individual::Crossover(const Individual& one, const Individual& two) {
   }
 }
 
-double Individual::Rating(TetrisBoard& board, const Tetramino& tetramino,
-                          int x, int orientation) const {
-  Q_ASSERT(weights_.count() == Criteria_Count);
-
-  int y = board.TetraminoHeight(tetramino, x, orientation);
-
-  if (y < 0) {
-    // We can't add the tetramino here
-    return std::numeric_limits<double>::quiet_NaN();
-  }
-
-  // Add the tetramino to the board
-  board.Add(tetramino, x, y, orientation);
-
-  // Count the rows that were removed by adding this tetramino
-  int removed_lines = board.ClearRows();
-
-  int pile_height;
-  int holes;
-  int connected_holes;
-  int altitude_difference;
-  int max_well_depth;
-
-  board.Analyse(&pile_height, &holes, &connected_holes,
-                &altitude_difference, &max_well_depth);
-
-  return
-      weights_[PileHeight] * pile_height +
-      weights_[Holes] * holes +
-      weights_[ConnectedHoles] * connected_holes +
-      weights_[RemovedLines] * removed_lines +
-      weights_[AltitudeDifference] * altitude_difference +
-      weights_[MaxWellDepth] * max_well_depth;
-}
-
-void Individual::SetFitness(QList<Game*> games) {
+void Individual::SetFitness(QList<quint64> games) {
   quint64 running_total = 0;
 
-  foreach (const Game* game, games) {
-    running_total += game->BlocksPlaced();
+  foreach (quint64 game, games) {
+    running_total += game;
   }
   fitness_ = float(running_total) / games.count();
   has_fitness_ = true;
