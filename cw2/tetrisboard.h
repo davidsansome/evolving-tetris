@@ -12,7 +12,11 @@
 template <int W = 10, int H = 20>
 class TetrisBoard {
  public:
-  TetrisBoard() {}
+  TetrisBoard(bool* cells = NULL, int* highest_cell = NULL);
+  ~TetrisBoard();
+
+  static int CellsSize() { return W*H; }
+  static int HighestCellSize() { return W; }
 
   void Clear();
   void CopyFrom(const TetrisBoard& other);
@@ -51,9 +55,32 @@ class TetrisBoard {
   void UpdateHighestCells() { qt_noop(); }
 #endif
 
-  std::tr1::array<bool, W*H> cells_;
-  std::tr1::array<int, W> highest_cell_;
+  bool has_ownership_;
+  bool* cells_;
+  bool* cells_end_;
+  int* highest_cell_;
+  int* highest_cell_end_;
 };
+
+template <int W, int H>
+TetrisBoard<W,H>::TetrisBoard(bool* cells, int* highest_cell)
+    : has_ownership_(false),
+      cells_(cells ? cells : new bool[CellsSize()]),
+      cells_end_(cells_ + CellsSize()),
+      highest_cell_(highest_cell ? highest_cell : new int[HighestCellSize()]),
+      highest_cell_end_(highest_cell_ + HighestCellSize())
+{
+  if (!cells || !highest_cell)
+    has_ownership_ = true;
+}
+
+template <int W, int H>
+TetrisBoard<W,H>::~TetrisBoard() {
+  if (has_ownership_) {
+    delete[] cells_;
+    delete[] highest_cell_;
+  }
+}
 
 template <int W, int H>
 const bool& TetrisBoard<W,H>::Cell(int x, int y) const {
@@ -84,8 +111,8 @@ bool& TetrisBoard<W,H>::Cell(int x, int y) {
 
 template <int W, int H>
 void TetrisBoard<W,H>::Clear() {
-  std::fill(cells_.begin(), cells_.end(), false);
-  std::fill(highest_cell_.begin(), highest_cell_.end(), H);
+  std::fill(cells_, cells_end_, false);
+  std::fill(highest_cell_, highest_cell_end_, H);
 
 #ifndef QT_NO_DEBUG
   dirty_ = false;
@@ -94,8 +121,8 @@ void TetrisBoard<W,H>::Clear() {
 
 template <int W, int H>
 void TetrisBoard<W,H>::CopyFrom(const TetrisBoard& other) {
-  std::copy(other.cells_.begin(), other.cells_.end(), cells_.begin());
-  std::copy(other.highest_cell_.begin(), other.highest_cell_.end(), highest_cell_.begin());
+  std::copy(other.cells_, other.cells_end_, cells_);
+  std::copy(other.highest_cell_, other.highest_cell_end_, highest_cell_);
 
 #ifndef QT_NO_DEBUG
   dirty_ = false;
@@ -128,24 +155,24 @@ int TetrisBoard<W,H>::ClearRows() {
 
   int rows_cleared = 0;
 
-  bool* row_start = cells_.begin();
+  bool* row_start = cells_;
   bool* row_end = row_start + W;
 
   // For each row...
-  for ( ; row_start != cells_.end() ; row_start = row_end, row_end += W) {
+  for ( ; row_start != cells_end_ ; row_start = row_end, row_end += W) {
     // Decide whether we need to clear the row
     if (std::find(row_start, row_end, false) != row_end)
       continue;
 
     // Move all the higher rows down one
-    std::copy_backward(cells_.begin(), row_start, row_end);
+    std::copy_backward(cells_, row_start, row_end);
 
     rows_cleared ++;
   }
 
   if (rows_cleared) {
     // Clear the new rows at the top
-    std::fill(cells_.begin(), cells_.begin() + W*rows_cleared, false);
+    std::fill(cells_, cells_ + W*rows_cleared, false);
 
     // Update highest_cell_
     for (int x=0 ; x<W ; ++x) {
@@ -167,12 +194,12 @@ void TetrisBoard<W,H>::Analyse(int* pile_height, int* holes, int* connected_hole
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
   // Initialise the output variables
-  *pile_height = H - *std::min_element(highest_cell_.begin(), highest_cell_.end());
+  *pile_height = H - *std::min_element(highest_cell_, highest_cell_end_);
   int my_holes = 0;
   int my_connected_holes = 0;
   int my_max_well_depth = 0;
 
-  int max_pile_height = H - *std::max_element(highest_cell_.begin(), highest_cell_.end());
+  int max_pile_height = H - *std::max_element(highest_cell_, highest_cell_end_);
 
   // For each column...
   for (int x=0 ; x<W ; ++x) {
@@ -224,7 +251,7 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
 
   // Work out where to start
   int y_start = *std::min_element(
-      highest_cell_.begin() + x, highest_cell_.begin() + x + size.width()) - size.height();
+      highest_cell_ + x, highest_cell_ + x + size.width()) - size.height();
 
   if (y_start < 0)
     return y_start;
@@ -250,7 +277,7 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
     if (!dirty_)
       return;
 
-    std::fill(highest_cell_.begin(), highest_cell_.end(), H);
+    std::fill(highest_cell_, highest_cell_end_, H);
     for (int x=0 ; x<W ; ++x) {
       for (int y=0 ; y<H ; ++y) {
         if (Cell(x, y)) {

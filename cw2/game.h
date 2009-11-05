@@ -6,6 +6,7 @@
 
 #include "tetrisboard.h"
 #include "tetramino.h"
+#include "boardrating.h"
 
 #include <limits>
 #include <math.h>
@@ -72,47 +73,87 @@ bool Game<W, H>::Step() {
   const int oc1 = tetramino1.OrientationCount();
   const int oc2 = tetramino2.OrientationCount();
 
-  double best_score = std::numeric_limits<double>::max();
+  // Calculate the max size of search space
+  const int size_1 = oc1 * W;
+  const int size_2 = size_1 * oc2 * W;
 
-  // Best x position and orientation of first and second tetramino
-  int best_x1, best_o1, best_x2, best_o2;
+  // The actual size of the search space will be smaller than this because
+  // it assumes tetraminos with width=1.  Real tetraminos will be bigger,
+  // therefore there will be W - tetramino.width possible places for them.
+  // We keep the count of actual filled boards in here:
+  int real_size = 0;
+
+  // Allocate contiguous blocks of memory for our boards
+  bool* const cells_1 = new bool[BoardType::CellsSize() * size_1];
+  bool* const cells_2 = new bool[BoardType::CellsSize() * size_2];
+  int* const highest_cell_1 = new int[BoardType::HighestCellSize() * size_1];
+  int* const highest_cell_2 = new int[BoardType::HighestCellSize() * size_2];
+
+  // We start by initialising the boards in our search space with
+  // all possible combinations of tetramino placement and orientation
+  bool* cells_1_p = cells_1;
+  bool* cells_2_p = cells_2;
+  int* highest_cell_1_p = highest_cell_1;
+  int* highest_cell_2_p = highest_cell_2;
 
   for (int o1=0 ; o1<oc1 ; ++o1) {
-    int width1 = tetramino1.Size(o1).width();
-    for (int x1=0 ; x1<=W - width1 ; ++x1) {
-      BoardType board1;
+    for (int x1=0 ; x1<=W - tetramino1.Size(o1).width() ; ++x1) {
+      BoardType board1(cells_1_p, highest_cell_1_p);
       board1.CopyFrom(board_);
 
+      cells_1_p += BoardType::CellsSize();
+      highest_cell_1_p += BoardType::HighestCellSize();
+
       // Add this first tetramino to the new board
-      double score1 = individual_.Rating(board1, tetramino1, x1, o1);
-      if (isnan(score1))
+      int y1 = board1.TetraminoHeight(tetramino1, x1, o1);
+      if (y1 < 0)
         continue;
 
+      board1.Add(tetramino1, x1, y1, o1);
+      board1.ClearRows();
+
       for (int o2=0 ; o2<oc2 ; ++o2) {
-        int width2 = tetramino2.Size(o2).width();
-        for (int x2=0 ; x2<=W - width2 ; ++x2) {
-          BoardType board2;
+        for (int x2=0 ; x2<=W - tetramino2.Size(o2).width() ; ++x2) {
+          BoardType board2(cells_2_p, highest_cell_2_p);
           board2.CopyFrom(board1);
 
+          cells_2_p += BoardType::CellsSize();
+          highest_cell_2_p += BoardType::HighestCellSize();
+          real_size ++;
+
           // Add the second tetramino to the board
-          double score2 = individual_.Rating(board2, tetramino2, x2, o2);
-          if (isnan(score2))
+          int y2 = board1.TetraminoHeight(tetramino2, x2, o2);
+          if (y2 < 0)
             continue;
 
-          // Was this combination better than before?
-          if (score1 + score2 < best_score) {
-            best_score = score1 + score2;
-            best_x1 = x1;
-            best_x2 = x2;
-            best_o1 = o1;
-            best_o2 = o2;
-          }
+          board2.Add(tetramino2, x2, y2, o2);
+          board2.ClearRows();
         }
       }
     }
   }
 
-  if (best_score == std::numeric_limits<double>::max())
+  qDebug() << "Real size" << real_size << "of max" << size_2;
+
+  // Now we calculate the ratings for each board on the GPU
+  int4* output = new int4[size_2];
+  CudaFunctions::board_rating(cells_2, highest_cell_2, real_size, output);
+
+  BoardType b(cells_2, highest_cell_2);
+  qDebug() << b;
+  qDebug() << output[0].x << output[0].y << output[0].z;
+  exit(1);
+
+  // Cleanup
+  delete[] output;
+  delete[] cells_1;
+  delete[] cells_2;
+  delete[] highest_cell_1;
+  delete[] highest_cell_2;
+
+  return false;
+
+  /*if (best_score == std::numeric_limits<double>::max())
     return false;
 
   // Apply the best first move to the board
@@ -122,7 +163,7 @@ bool Game<W, H>::Step() {
 
   next_tetramino_ = tetramino2;
 
-  return true;
+  return true;*/
 }
 
 #endif // GAME_H

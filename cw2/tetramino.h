@@ -17,6 +17,7 @@ class Tetramino {
   static const int kTypeCount;
   static const int kBlockSize;
   static const int kPointsCount;
+  static const int kMaxOrientationCount;
 
  private:
   void Init();
@@ -29,8 +30,6 @@ class Tetramino {
   static QPoint* data_;
   static QSize* size_;
   static int* orientation_count_;
-
-  static const int kMaxOrientationCount;
 };
 
 QPoint* Tetramino::DataOffset(int type, int orientation, int i) const {

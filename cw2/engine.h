@@ -5,12 +5,13 @@
 
 #include "population.h"
 #include "game.h"
+#include "boardrating.h"
 
 class Engine {
  public:
   Engine();
 
-  typedef Game<8, 16> GameType;
+  typedef Game<BOARD_WIDTH, BOARD_HEIGHT> GameType;
 
   void Run();
 

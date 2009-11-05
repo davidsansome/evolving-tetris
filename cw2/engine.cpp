@@ -33,6 +33,7 @@ void Engine::Run() {
   cout << "# Board size " << board_size.width() << "x" << board_size.height() << endl;
   cout << "# Mutation std dev " << Individual::kStandardDeviation << endl;
   cout << "# Running for " << kMaxGenerations << " generations" << endl;
+  cout << "# Thread count "<< QThreadPool::globalInstance()->maxThreadCount() << endl;
 
 #ifndef QT_NO_DEBUG
   cout << "# Running in debug mode with assertions enabled" << endl;

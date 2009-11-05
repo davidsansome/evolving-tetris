@@ -31,6 +31,7 @@ int main(int argc, char** argv) {
   }
 #endif
 
+  QThreadPool::globalInstance()->setMaxThreadCount(1);
   Engine e;
   e.Run();
 
