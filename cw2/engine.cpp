@@ -10,10 +10,9 @@
 using std::cout;
 using std::endl;
 
-const int Engine::kPopulationSize = 10;
-const int Engine::kGamesToRun = 2;
+const int Engine::kPopulationSize = 256;
+const int Engine::kGamesToRun = 12;
 const int Engine::kMaxGenerations = 30;
-const int Engine::kThreadCount = 1;
 
 Engine::Engine()
     : pop_(kPopulationSize)
@@ -25,9 +24,7 @@ const Individual& Engine::FittestOf(const Individual& one, const Individual& two
 }
 
 void Engine::Run() {
-  if (kThreadCount != -1) {
-    QThreadPool::globalInstance()->setMaxThreadCount(kThreadCount);
-  }
+  pop_.InitRandom();
 
   QSize board_size(GameType::BoardType().Size());
 
@@ -36,13 +33,10 @@ void Engine::Run() {
   cout << "# Board size " << board_size.width() << "x" << board_size.height() << endl;
   cout << "# Mutation std dev " << Individual::kStandardDeviation << endl;
   cout << "# Running for " << kMaxGenerations << " generations" << endl;
-  cout << "# Thread count "<< QThreadPool::globalInstance()->maxThreadCount() << endl;
 
 #ifndef QT_NO_DEBUG
   cout << "# Running in debug mode with assertions enabled" << endl;
 #endif
-
-  pop_.InitRandom();
 
   for (int generation_count=0 ; generation_count<kMaxGenerations ; ++generation_count) {
     // Play games to get the fitness of new individuals

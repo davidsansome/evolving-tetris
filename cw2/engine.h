@@ -5,13 +5,12 @@
 
 #include "population.h"
 #include "game.h"
-#include "boardrating.h"
 
 class Engine {
  public:
   Engine();
 
-  typedef Game<16, 16> GameType;
+  typedef Game<8, 16> GameType;
 
   void Run();
 
@@ -24,7 +23,6 @@ class Engine {
   static const int kPopulationSize;
   static const int kGamesToRun;
   static const int kMaxGenerations;
-  static const int kThreadCount;
 
   // Functor for using QtConcurrentMap with object pointers
   template <typename T, typename C>

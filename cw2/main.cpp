@@ -1,4 +1,4 @@
-#include <QCoreApplication>
+#include <QApplication>
 #include <QtDebug>
 #include <QThreadPool>
 
@@ -19,7 +19,7 @@
 #endif
 
 int main(int argc, char** argv) {
-  QCoreApplication a(argc, argv);
+  QApplication a(argc, argv);
 
 #ifndef QT_NO_DEBUG
   QStringList args(a.arguments());

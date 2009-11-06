@@ -5,7 +5,6 @@
 #include <QtDebug>
 
 #include "tetramino.h"
-#include "boardrating.h"
 
 #include <algorithm>
 #include <tr1/array>
@@ -13,11 +12,7 @@
 template <int W = 10, int H = 20>
 class TetrisBoard {
  public:
-  TetrisBoard(bool* cells = NULL, int* highest_cell = NULL);
-  ~TetrisBoard();
-
-  static int CellsSize() { return W*H; }
-  static int HighestCellSize() { return W; }
+  TetrisBoard() {}
 
   void Clear();
   void CopyFrom(const TetrisBoard& other);
@@ -56,32 +51,9 @@ class TetrisBoard {
   void UpdateHighestCells() { qt_noop(); }
 #endif
 
-  bool has_ownership_;
-  bool* cells_;
-  bool* cells_end_;
-  int* highest_cell_;
-  int* highest_cell_end_;
+  std::tr1::array<bool, W*H> cells_;
+  std::tr1::array<int, W> highest_cell_;
 };
-
-template <int W, int H>
-TetrisBoard<W,H>::TetrisBoard(bool* cells, int* highest_cell)
-    : has_ownership_(false),
-      cells_(cells ? cells : new bool[CellsSize()]),
-      cells_end_(cells_ + CellsSize()),
-      highest_cell_(highest_cell ? highest_cell : new int[HighestCellSize()]),
-      highest_cell_end_(highest_cell_ + HighestCellSize())
-{
-  if (!cells || !highest_cell)
-    has_ownership_ = true;
-}
-
-template <int W, int H>
-TetrisBoard<W,H>::~TetrisBoard() {
-  if (has_ownership_) {
-    delete[] cells_;
-    delete[] highest_cell_;
-  }
-}
 
 template <int W, int H>
 const bool& TetrisBoard<W,H>::Cell(int x, int y) const {
@@ -112,8 +84,8 @@ bool& TetrisBoard<W,H>::Cell(int x, int y) {
 
 template <int W, int H>
 void TetrisBoard<W,H>::Clear() {
-  std::fill(cells_, cells_end_, false);
-  std::fill(highest_cell_, highest_cell_end_, H);
+  std::fill(cells_.begin(), cells_.end(), false);
+  std::fill(highest_cell_.begin(), highest_cell_.end(), H);
 
 #ifndef QT_NO_DEBUG
   dirty_ = false;
@@ -122,8 +94,8 @@ void TetrisBoard<W,H>::Clear() {
 
 template <int W, int H>
 void TetrisBoard<W,H>::CopyFrom(const TetrisBoard& other) {
-  std::copy(other.cells_, other.cells_end_, cells_);
-  std::copy(other.highest_cell_, other.highest_cell_end_, highest_cell_);
+  std::copy(other.cells_.begin(), other.cells_.end(), cells_.begin());
+  std::copy(other.highest_cell_.begin(), other.highest_cell_.end(), highest_cell_.begin());
 
 #ifndef QT_NO_DEBUG
   dirty_ = false;
@@ -156,24 +128,24 @@ int TetrisBoard<W,H>::ClearRows() {
 
   int rows_cleared = 0;
 
-  bool* row_start = cells_;
+  bool* row_start = cells_.begin();
   bool* row_end = row_start + W;
 
   // For each row...
-  for ( ; row_start != cells_end_ ; row_start = row_end, row_end += W) {
+  for ( ; row_start != cells_.end() ; row_start = row_end, row_end += W) {
     // Decide whether we need to clear the row
     if (std::find(row_start, row_end, false) != row_end)
       continue;
 
     // Move all the higher rows down one
-    std::copy_backward(cells_, row_start, row_end);
+    std::copy_backward(cells_.begin(), row_start, row_end);
 
     rows_cleared ++;
   }
 
   if (rows_cleared) {
     // Clear the new rows at the top
-    std::fill(cells_, cells_ + W*rows_cleared, false);
+    std::fill(cells_.begin(), cells_.begin() + W*rows_cleared, false);
 
     // Update highest_cell_
     for (int x=0 ; x<W ; ++x) {
@@ -194,15 +166,53 @@ void TetrisBoard<W,H>::Analyse(int* pile_height, int* holes, int* connected_hole
                                int* altitude_difference, int* max_well_depth) const {
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
-  int4 output;
-  int output2;
-  CudaFunctions::board_rating<W, H>(cells_, highest_cell_, 1, &output, &output2);
+  // Initialise the output variables
+  *pile_height = H - *std::min_element(highest_cell_.begin(), highest_cell_.end());
+  int my_holes = 0;
+  int my_connected_holes = 0;
+  int my_max_well_depth = 0;
 
-  *holes = output.x;
-  *connected_holes = output.y;
-  *max_well_depth = output.z;
-  *pile_height = output.w;
-  *altitude_difference = output2;
+  int max_pile_height = H - *std::max_element(highest_cell_.begin(), highest_cell_.end());
+
+  // For each column...
+  for (int x=0 ; x<W ; ++x) {
+    int well_depth;
+
+    // A well is a narrow 1-cell wide hole that is open from the top.
+    // Special cases for the edges of the board.
+    if (x == 0) {
+      well_depth = highest_cell_[x] - highest_cell_[1];
+    } else if (x == W-1) {
+      well_depth = highest_cell_[x] - highest_cell_[x-1];
+    } else {
+      well_depth = highest_cell_[x] - qMax(highest_cell_[x-1], highest_cell_[x+1]);
+    }
+
+    my_max_well_depth = qMax(my_max_well_depth, well_depth);
+
+    // Start at the highest filled cell and go down.  Keep track of the cell
+    // above us.
+    bool cell_above = true;
+    for (int y=highest_cell_[x]+1 ; y<H ; ++y) {
+      const bool cell = Cell(x, y);
+      if (!cell) {
+        // We're in a hole
+        ++ my_holes;
+
+        // If the one above wasn't a hole as well then this is a new unique
+        // connected hole
+        if (cell_above) {
+          ++ my_connected_holes;
+        }
+      }
+      cell_above = cell;
+    }
+  }
+
+  *holes = my_holes;
+  *connected_holes = my_connected_holes;
+  *max_well_depth = my_max_well_depth;
+  *altitude_difference = *pile_height - max_pile_height;
 }
 
 template <int W, int H>
@@ -214,7 +224,7 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
 
   // Work out where to start
   int y_start = *std::min_element(
-      highest_cell_ + x, highest_cell_ + x + size.width()) - size.height();
+      highest_cell_.begin() + x, highest_cell_.begin() + x + size.width()) - size.height();
 
   if (y_start < 0)
     return y_start;
@@ -240,7 +250,7 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
     if (!dirty_)
       return;
 
-    std::fill(highest_cell_, highest_cell_end_, H);
+    std::fill(highest_cell_.begin(), highest_cell_.end(), H);
     for (int x=0 ; x<W ; ++x) {
       for (int y=0 ; y<H ; ++y) {
         if (Cell(x, y)) {
