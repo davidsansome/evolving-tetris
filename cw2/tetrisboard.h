@@ -5,6 +5,7 @@
 #include <QtDebug>
 
 #include "tetramino.h"
+#include "boardrating.h"
 
 #include <algorithm>
 #include <tr1/array>
@@ -193,53 +194,15 @@ void TetrisBoard<W,H>::Analyse(int* pile_height, int* holes, int* connected_hole
                                int* altitude_difference, int* max_well_depth) const {
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
-  // Initialise the output variables
-  *pile_height = H - *std::min_element(highest_cell_, highest_cell_end_);
-  int my_holes = 0;
-  int my_connected_holes = 0;
-  int my_max_well_depth = 0;
+  int4 output;
+  int output2;
+  CudaFunctions::board_rating<W, H>(cells_, highest_cell_, 1, &output, &output2);
 
-  int max_pile_height = H - *std::max_element(highest_cell_, highest_cell_end_);
-
-  // For each column...
-  for (int x=0 ; x<W ; ++x) {
-    int well_depth;
-
-    // A well is a narrow 1-cell wide hole that is open from the top.
-    // Special cases for the edges of the board.
-    if (x == 0) {
-      well_depth = highest_cell_[x] - highest_cell_[1];
-    } else if (x == W-1) {
-      well_depth = highest_cell_[x] - highest_cell_[x-1];
-    } else {
-      well_depth = highest_cell_[x] - qMax(highest_cell_[x-1], highest_cell_[x+1]);
-    }
-
-    my_max_well_depth = qMax(my_max_well_depth, well_depth);
-
-    // Start at the highest filled cell and go down.  Keep track of the cell
-    // above us.
-    bool cell_above = true;
-    for (int y=highest_cell_[x]+1 ; y<H ; ++y) {
-      const bool cell = Cell(x, y);
-      if (!cell) {
-        // We're in a hole
-        ++ my_holes;
-
-        // If the one above wasn't a hole as well then this is a new unique
-        // connected hole
-        if (cell_above) {
-          ++ my_connected_holes;
-        }
-      }
-      cell_above = cell;
-    }
-  }
-
-  *holes = my_holes;
-  *connected_holes = my_connected_holes;
-  *max_well_depth = my_max_well_depth;
-  *altitude_difference = *pile_height - max_pile_height;
+  *holes = output.x;
+  *connected_holes = output.y;
+  *max_well_depth = output.z;
+  *pile_height = output.w;
+  *altitude_difference = output2;
 }
 
 template <int W, int H>

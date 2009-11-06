@@ -11,6 +11,8 @@
 #include <limits>
 #include <math.h>
 
+#include <cuda_runtime.h>
+
 class Individual;
 
 template <int W, int H>
@@ -89,12 +91,20 @@ bool Game<W, H>::Step() {
   int* const highest_cell_1 = new int[BoardType::HighestCellSize() * size_1];
   int* const highest_cell_2 = new int[BoardType::HighestCellSize() * size_2];
 
+  // We need to remember [ox]1 for our boards as well
+  int2* const board_properties = new int2[size_2];
+
+  // And the number of rows cleared
+  int* const rows_cleared = new int[size_2];
+
   // We start by initialising the boards in our search space with
   // all possible combinations of tetramino placement and orientation
   bool* cells_1_p = cells_1;
   bool* cells_2_p = cells_2;
   int* highest_cell_1_p = highest_cell_1;
   int* highest_cell_2_p = highest_cell_2;
+  int2* board_properties_p = board_properties;
+  int* rows_cleared_p = rows_cleared;
 
   for (int o1=0 ; o1<oc1 ; ++o1) {
     for (int x1=0 ; x1<=W - tetramino1.Size(o1).width() ; ++x1) {
@@ -117,53 +127,75 @@ bool Game<W, H>::Step() {
           BoardType board2(cells_2_p, highest_cell_2_p);
           board2.CopyFrom(board1);
 
-          cells_2_p += BoardType::CellsSize();
-          highest_cell_2_p += BoardType::HighestCellSize();
-          real_size ++;
-
           // Add the second tetramino to the board
           int y2 = board1.TetraminoHeight(tetramino2, x2, o2);
           if (y2 < 0)
             continue;
 
+          *board_properties_p = make_int2(o1, x1);
+
+          cells_2_p += BoardType::CellsSize();
+          highest_cell_2_p += BoardType::HighestCellSize();
+          board_properties_p++;
+          real_size ++;
+
           board2.Add(tetramino2, x2, y2, o2);
-          board2.ClearRows();
+          *rows_cleared_p = board2.ClearRows();
+
+          ++rows_cleared_p;
         }
       }
     }
   }
 
-  qDebug() << "Real size" << real_size << "of max" << size_2;
+  if (real_size == 0) {
+    // No possible places for the tetramino - end the game
+    return false;
+  }
 
-  // Now we calculate the ratings for each board on the GPU
+  // Now we calculate the ratings for each possible board on the GPU
+  // [output, output2, rows_cleared] for each board expands to the 5 board
+  // rating numbers
   int4* output = new int4[size_2];
-  CudaFunctions::board_rating(cells_2, highest_cell_2, real_size, output);
+  int* output2 = new int[size_2];
+  CudaFunctions::board_rating<W, H>(cells_2, highest_cell_2, real_size, output, output2);
 
-  BoardType b(cells_2, highest_cell_2);
-  qDebug() << b;
-  qDebug() << output[0].x << output[0].y << output[0].z;
-  exit(1);
-
-  // Cleanup
-  delete[] output;
+  // We're done with the board data now
   delete[] cells_1;
   delete[] cells_2;
   delete[] highest_cell_1;
   delete[] highest_cell_2;
 
-  return false;
+  // Find the best board.  This is the one with the lowest rating.
+  double best_rating = std::numeric_limits<double>::max();
+  int best_index = 0;
 
-  /*if (best_score == std::numeric_limits<double>::max())
-    return false;
+  for (int i=0 ; i<real_size ; ++i) {
+    double rating = individual_.Rating(output[i].w, output[i].x, output[i].y,
+                                       output2[i], output[i].z, rows_cleared[i]);
+    if (rating < best_rating) {
+      best_rating = rating;
+      best_index = i;
+    }
+  }
 
-  // Apply the best first move to the board
+  // Now we have the best board.  Add its tetramino to our board.
+  int best_o1 = board_properties[best_index].x;
+  int best_x1 = board_properties[best_index].y;
   int best_y1 = board_.TetraminoHeight(tetramino1, best_x1, best_o1);
+
   board_.Add(tetramino1, best_x1, best_y1, best_o1);
   board_.ClearRows();
 
   next_tetramino_ = tetramino2;
 
-  return true;*/
+  // Cleanup
+  delete[] output;
+  delete[] output2;
+  delete[] board_properties;
+  delete[] rows_cleared;
+
+  return true;
 }
 
 #endif // GAME_H

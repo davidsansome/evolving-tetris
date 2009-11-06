@@ -69,6 +69,20 @@ bool Individual::operator ==(const Individual& other) const {
   return weights_ == other.weights_;
 }
 
+double Individual::Rating(int pile_height, int holes, int connected_holes,
+                int altitude_difference, int max_well_depth,
+                int removed_lines) const {
+  Q_ASSERT(weights_.count() == Criteria_Count);
+
+  return
+      weights_[PileHeight] * pile_height +
+      weights_[Holes] * holes +
+      weights_[ConnectedHoles] * connected_holes +
+      weights_[RemovedLines] * removed_lines +
+      weights_[AltitudeDifference] * altitude_difference +
+      weights_[MaxWellDepth] * max_well_depth;
+}
+
 QDebug operator<<(QDebug s, const Individual& i) {
   return s.space() << (i.HasFitness() ? QString::number(i.Fitness()).toAscii().constData() : "??")
                    << "-" << i.Weights();

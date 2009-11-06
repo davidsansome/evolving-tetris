@@ -1,4 +1,4 @@
-#include <QApplication>
+#include <QCoreApplication>
 #include <QtDebug>
 #include <QThreadPool>
 
@@ -19,7 +19,7 @@
 #endif
 
 int main(int argc, char** argv) {
-  QApplication a(argc, argv);
+  QCoreApplication a(argc, argv);
 
 #ifndef QT_NO_DEBUG
   QStringList args(a.arguments());
@@ -31,7 +31,6 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  QThreadPool::globalInstance()->setMaxThreadCount(1);
   Engine e;
   e.Run();
 

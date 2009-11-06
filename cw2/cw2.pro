@@ -20,8 +20,8 @@ CONFIG(debug, debug|release) {
     QT += testlib
     SOURCES += test_board.cpp
     HEADERS += test_board.h
-    QMAKE_POST_LINK = ./cw2 \
-        t
+    #QMAKE_POST_LINK = ./cw2 \
+    #    t
 }
 
 # google-perftools
@@ -40,8 +40,8 @@ cu.output = ${QMAKE_FILE_BASE}.cu.o
 cu.commands = nvcc \
     -o \
     ${QMAKE_FILE_BASE}.cu.o \
-    -c -g -G \
+    -c \
     ${QMAKE_FILE_NAME} \
-    --compiler-bindir=/home/david/NVIDIA_GPU_Computing_SDK/bin --device-emulation
+    --compiler-bindir=/home/david/NVIDIA_GPU_Computing_SDK/bin
 QMAKE_EXTRA_COMPILERS += cu
 OTHER_FILES += $${CUSOURCES}
