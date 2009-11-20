@@ -1,0 +1,66 @@
+\documentclass[a4paper,12pt]{article}
+
+\usepackage[pdftex]{graphicx}
+\usepackage[pdftex,breaklinks=true,colorlinks=true,linkcolor=black,filecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{color}
+\usepackage[paper=a4paper,hmargin=2cm,vmargin=3cm]{geometry}
+\usepackage{lscape}
+
+% Paragraph style
+\setlength\parindent{0in}
+\setlength\parskip{0.1in}
+
+% URL style
+\def\UrlFont{\small\tt}
+
+%opening
+\title{COMP6026 Assignment 2 \\
+An Evolutionary Approach to Tetris}
+\author{David Sansome $<$ds505$>$}
+
+\begin{document}
+\bibliographystyle{plain}
+
+\maketitle
+
+\begin{abstract}
+
+This report describes the design, implementation and results of an evolutionary
+algorithm that plays the popular game of Tetris \cite{AboutTetris}.
+Tetris is a falling-block game where the aim is to survive as long as possible
+by dropping blocks (\emph{Tetraminos}) into a fixed-size board.
+A row is cleared from the board if it is completely filled, and the game ends
+when there is no more room in the board for new blocks.
+The challenge therefore is to place blocks in such a way as to minimize holes
+in the board and to clear as many rows as possible.
+
+The algorithm used is as described by Mandl et.\ al \cite{Mandl2005}.
+At each step of the game the computer evaluates all possible subsequent boards
+and chooses the best move based on a rating function.
+This function is a weighted sum of various board attributes, such as the height
+of filled cells and the number of holes in the board.
+The algorithm evolves the weights used in this function and finds sets of
+weights that lead to longer games of Tetris.
+
+Our implementation uses fitness proportional selection and uniform crossover.
+
+\end{abstract}
+
+\tableofcontents
+
+\section{Methods}
+
+\subsection{Representation of Individuals}
+\subsection{Fitness Evaluation}
+\subsection{Generational}
+\subsection{Selection}
+\subsection{Crossover and Mutation}
+\subsection{Implementation Details}
+
+\section{Results}
+
+\section{Further Work}
+
+\bibliography{../COMP6026}
+
+\end{document}
