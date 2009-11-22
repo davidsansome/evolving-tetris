@@ -97,7 +97,7 @@ The board rating function is a weighted sum of the following six criteria:
   \item \emph{Removed Lines}: The number of lines that were cleared in the last
       step to get to the current board.
   \item \emph{Altitude Difference}: The difference between the highest occupied
-      cell and the lowest free cell that are directly reachable from the top.
+      cell and the lowest free cell that is directly reachable from the top.
   \item \emph{Maximum Well Depth}: The depth of the deepest well on the board.
       A well is a vertical group of unoccupied cells with a width of one,
       reachable from the top and with other filled cells on both sides.
@@ -257,7 +257,7 @@ two-point crossover.
 Each one of the individual's weights is mutated by a small amount after it is
 created.
 This is done by multiplying the weight by a random number drawn from a normal
-distribution centred around 1.0 and with standard deviation $\sigma = 0.1$.
+distribution centred around 1.0 and with standard deviation $\sigma = 0.01$.
 These parameters were chosen for the normal distribution as they allow for small
 variations to occur in the values of the weights while still making it possible
 for genes to be virtually turned off as weights to go to 0.
