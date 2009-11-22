@@ -5,7 +5,7 @@
 #include <limits>
 #include <algorithm>
 
-const double Individual::kStandardDeviation = 0.01;
+const double Individual::kStandardDeviation = 0.5;
 Individual::RandomGenType* Individual::sRandomGen = NULL;
 
 Individual::Individual()

@@ -10,7 +10,7 @@ class Engine {
  public:
   Engine();
 
-  typedef Game<10, 20> GameType;
+  typedef Game<6, 12> GameType;
 
   void Run();
 
