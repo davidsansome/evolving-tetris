@@ -51,6 +51,47 @@ Our implementation uses fitness proportional selection and uniform crossover.
 \section{Methods}
 
 \subsection{Representation of Individuals}
+
+Each individual in the population is essentially a different \emph{board
+rating function}.
+The individual uses its board rating function at each step of the game to
+decide where to place each block, choosing the move that will lead to the board
+with the best score.
+Individuals with better board rating functions will therefore make better moves
+and last longer than the other individuals.
+
+The board rating function is a weighted sum of the following six criteria:
+
+\begin{enumerate}
+  \item \emph{Pile Height}: The total height of the Tetris board, measured from
+      the bottom of the board to the highest occupied cell.
+  \item \emph{Holes}: The number of unoccupied cells that have at least one
+      occupied cell above them.
+  \item \emph{Connected Holes}: Same as \emph{Holes}, except vertically
+      connected unoccupied cells only count as one connected hole.
+  \item \emph{Removed Lines}: The number of lines that were cleared in the last
+      step to get to the current board.
+  \item \emph{Altitide Difference}: The difference between the highest occupied
+      cell and the lowest free cell that are directly reachable from the top.
+  \item \emph{Maximum Well Depth}: The depth of the deepest well on the board.
+      A well is a vertical group of unoccupied cells with a width of one,
+      reachable from the top and with other filled cells on both sides.
+\end{enumerate}
+
+The algorithm described by Mandl et.\ al uses these six criteria as well as
+an additional six found in Colin Fahey's ``Standard Tetris Application''
+\cite{TetrisAI}, however only these original six were used in our
+implementation.
+
+The six criteria ($r_i$) are combined to create the overall linear rating
+function:
+
+\begin{equation}
+  R_l(b) = \sum^n_{i=0}
+\end{equation}
+
+
+
 \subsection{Fitness Evaluation}
 \subsection{Generational}
 \subsection{Selection}

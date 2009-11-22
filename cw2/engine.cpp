@@ -11,7 +11,7 @@ using std::cout;
 using std::endl;
 
 const int Engine::kPopulationSize = 256;
-const int Engine::kGamesToRun = 12;
+const int Engine::kGamesToRun = 32;
 const int Engine::kMaxGenerations = 30;
 
 Engine::Engine()

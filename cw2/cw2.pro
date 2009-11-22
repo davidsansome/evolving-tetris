@@ -26,5 +26,5 @@ CONFIG(debug, debug|release) {
 }
 
 # google-perftools
-LIBS += -lprofiler
-CONFIG(release):QMAKE_CXXFLAGS += -g
+#LIBS += -lprofiler
+#CONFIG(release):QMAKE_CXXFLAGS += -g
