@@ -5,6 +5,7 @@
 \usepackage{color}
 \usepackage[paper=a4paper,hmargin=2cm,vmargin=3cm]{geometry}
 \usepackage{lscape}
+\usepackage{amsmath}
 
 % Paragraph style
 \setlength\parindent{0in}
@@ -78,21 +79,69 @@ The board rating function is a weighted sum of the following six criteria:
       reachable from the top and with other filled cells on both sides.
 \end{enumerate}
 
+\begin{figure}[hb]
+  \centering
+  \includegraphics[width=5cm]{boards1.png}
+  \caption{A Tetris board showing two of the rating criteria.  $h$ is
+      the \emph{Pile Height}, or distance from the bottom of the board to
+      the highest occupied cell.  $d$ is the \emph{Altitiude Difference}, or
+      distance from the highest occupied cell to the lowest occupied cell
+      reachable from the top of the board.}
+  \label{BoardRating}
+\end{figure}
+
 The algorithm described by Mandl et.\ al uses these six criteria as well as
 an additional six found in Colin Fahey's ``Standard Tetris Application''
 \cite{TetrisAI}, however only these original six were used in our
 implementation.
 
 The six criteria ($r_i$) are combined to create the overall linear rating
-function:
+function $R_l(b)$:
 
 \begin{equation}
-  R_l(b) = \sum^n_{i=0}
+  R_l(b) = \sum^6_{i=1} w_ir_i(b)
 \end{equation}
 
+Mandl describes two other possible rating functions which give a closer
+approximation to the way a human player evaluates the Tetris board.
+There is no big difference between pile heights of 2 and 4, but a difference
+between heights of 15 and 17 has a much more drastic influence on the game.
+The exponential rating function $R_e(b)$ is useful because it treats these two
+scenarios differently.
+The third rating function $R_d(b)$ uses the idea that the optimum value for a
+certain criteria might not be zero.
 
+\begin{equation}
+  R_e(b) = \sum^6_{i=1} w_ir_i(b)^{e_i}
+\end{equation}
+
+\begin{equation}
+  R_d(b) = \sum^6_{i=1} w_i \lvert r_i(b) - d_i \rvert ^{e_i}
+\end{equation}
+
+Although Mandl evaluates all three rating functions, only the simple linear
+rating function $R_l(b)$ is used in this implementation.
+
+Each individual therefore consists of one \emph{weights} chromosome
+($w_1, \ldots, w_6$) with each of $w_i$ being an integer number.
 
 \subsection{Fitness Evaluation}
+
+The fitness of each individual genotype is measured on the phenotype.
+In other words, an instance of the board rating function is created and it is
+allowed to play a game of Tetris.
+The fitness of the rating function is taken to be the number of blocks it
+manages to place before the game ends.
+
+Other possible methods of determining fitness include counting cleared lines
+and counting ``points'' for different kinds of actions (for example, scoring
+bonus points from clearing more than one line with a single block).
+
+There is a strong random component to the success of an individual in a game of
+Tetris (due to the randomness of the upcoming Tetraminos), so each individual
+is allowed to play a number of games (usually around 12), and the mean number
+of blocks placed each time is taken as its fitness.
+
 \subsection{Generational}
 \subsection{Selection}
 \subsection{Crossover and Mutation}
