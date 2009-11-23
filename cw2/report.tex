@@ -71,6 +71,7 @@ Our implementation uses fitness proportional selection and uniform crossover.
 
 \end{abstract}
 
+\clearpage
 \tableofcontents
 
 \section{Methods}
@@ -174,7 +175,7 @@ of blocks placed each time is taken as its fitness.
 The Genetic Algorithm (GA) written to evolve the weights uses a generational
 approach in which each member of the fixed-size population is replaced at the
 start of every new generation.
-A pseudo-code implementation is shown in listing \ref{psuedocode}.
+A pseudo-code implementation is shown in Listing \ref{psuedocode}.
 
 \begin{lstlisting}[firstnumber=1,language=c,morekeywords={until,foreach,in},frame=single,mathescape=true,caption={GA pseudo-code},label={psuedocode},float=[htb]]
 foreach individual in population
@@ -262,7 +263,7 @@ These parameters were chosen for the normal distribution as they allow for small
 variations to occur in the values of the weights while still making it possible
 for genes to be virtually turned off as weights to go to 0.
 
-\begin{figure}[hb]
+\begin{figure}[htb]
   \centering
   \includegraphics[width=8cm]{normaldist.png}
   \caption{Probability density function of the normal distribution from which
@@ -421,20 +422,141 @@ same way as the smaller boards.
 
 The fittest individual was able to place 467,739 blocks after 6 generations.
 
-\begin{figure*}[h]
+\newcommand{\smallgraphwidth}{8cm}
+\begin{figure}[htb]
   \centering
-  \includegraphics[width=\graphwidth]{results/10x20-results1.png}
-\end{figure*}
+  \subfloat[First run]{\label{Large1}\includegraphics[width=\smallgraphwidth]{results/10x20-results1.png}}
+  \qquad
+  \subfloat[Second run]{\label{Large2}\includegraphics[width=\smallgraphwidth]{results/10x20-results2.png}}
 
-\begin{figure}[h]
-  \centering
-  \includegraphics[width=\graphwidth]{results/10x20-results2.png}
   \caption{Fitness of individuals over time on a full-sized 10x20 Tetris board}
   \label{Large}
 \end{figure}
 
+A complete run on a 8x16 board is shown in Figure \ref{Medium}.
+The mean fitness seems to rise in a similar way but reaches its maximum sooner
+than the smaller board (Figure \ref{StdDev001}).
+After generation 12 this population stops any dramatic increases in fitness,
+but the smaller board keeps increasing (albeit very slowly) right until the end.
+
+This could be because smaller games of Tetris are much harder so there's more
+to gain from small improvements to the weights.
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\graphwidth]{results/8x16.png}
+  \caption{Fitness of individuals over time on a 8x16 Tetris board}
+  \label{Medium}
+\end{figure}
+
+The fittest individual in the 8x16 game was seen after 19 generations, and
+was able to place 52,814 blocks.
+
 \section{Further Work}
 
+It would be interesting to investigate the effects of co-evolving the
+Tetris-playing population against a second population that is trying to create
+new types of Tetramino that are more difficult to place successfully.
+
+Each individual in the second population would represent a set of Tetraminos,
+and they would all be initialised to the standard set shown in Figure
+\ref{Tetraminos}.
+The mutation operator for the second population would alter individual
+Tetraminos by adding or removing cells to the shape, up to a certain size limit,
+and ensuring that each shape remained connected.
+Individuals from the Tetris-playing population would then play games against
+individuals from the Tetramino-creating population.
+
+The mutation and combination operators for the second population would have the
+scope to become much more complicated than those of the Tetris-playing
+population.
+For example, one-point crossover could be used to merge different halves of
+separate Tetraminos together.
+
+The questions to be answered would be:
+
+\begin{enumerate}
+  \item Does co-evolution improve the Tetris-players' ability to cope with new
+      and unknown shapes?
+  \item Will individuals that have undergone co-evolution then also have
+      improved their ability to play with the original set of Tetraminos.
+\end{enumerate}
+
+In answering these questions, it would also be useful to make the Tetris players
+more sophisticated:
+
+\begin{enumerate}
+  \item The board rating function should include the additional six criteria
+      detailed in Mandl's paper.
+  \item The exponential rating function (Equation \ref{ExponentialRating})
+      described in Mandl's paper should be used, and the set of exponents
+      $e_1, \ldots, e_N$ added to the individuals as an additional genotype to
+      be evolved.
+      Mandl saw no significant improvements from adding evolvable displacements
+      to the exponential rating function (Equation \ref{DisplacementRating}),
+      so in our extension we will just use the version of this function without
+      displacements.
+\end{enumerate}
+
+We will likely see different sets of weights emerging for the more complicated
+shapes, as different strategies will be required to play games with them
+successfully.
+However it seems equally possible that since the board rating criteria are
+quite generic (number of holes, pile height, etc.), an individual that is good
+at playing with one set of Tetraminos will be just as good as playing with
+another set.
+
 \bibliography{../COMP6026}
+
+\appendix
+\clearpage
+\lstset{language=c++}
+\section{Code Listings}
+
+\subsection{main.cpp}
+\lstinputlisting{"main.cpp"}
+
+\clearpage
+\subsection{engine.h}
+\lstinputlisting{"engine.h"}
+
+\subsection{engine.cpp}
+\lstinputlisting{"engine.cpp"}
+
+\clearpage
+\subsection{game.h}
+\lstinputlisting{"game.h"}
+
+\clearpage
+\subsection{individual.h}
+\lstinputlisting{"individual.h"}
+
+\subsection{individual.cpp}
+\lstinputlisting{"individual.cpp"}
+
+\clearpage
+\subsection{population.h}
+\lstinputlisting{"population.h"}
+
+\subsection{population.cpp}
+\lstinputlisting{"population.cpp"}
+
+\clearpage
+\subsection{tetrisboard.h}
+\lstinputlisting{"tetrisboard.h"}
+
+\clearpage
+\subsection{tetramino.h}
+\lstinputlisting{"tetramino.h"}
+
+\subsection{tetramino.cpp}
+\lstinputlisting{"tetramino.cpp"}
+
+\clearpage
+\subsection{testboard.h}
+\lstinputlisting{"test_board.h"}
+
+\subsection{testboard.cpp}
+\lstinputlisting{"test_board.cpp"}
 
 \end{document}
