@@ -11,6 +11,7 @@ DEFINE_string(size, "6x12", "board size");
 #ifndef QT_NO_DEBUG
 # include <QTest>
 # include "test_board.h"
+# include "test_tetramino.h"
 
   template <typename T>
   void RunTest(const QStringList& args) {
@@ -41,6 +42,7 @@ int main(int argc, char** argv) {
   if (args.count() >= 2 && args[1] == "t") {
     args.removeAt(1);
     RunTest<Test::Board>(args);
+    RunTest<Test::Tetramino>(args);
 
     return 0;
   }

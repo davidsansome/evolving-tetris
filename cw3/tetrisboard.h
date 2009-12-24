@@ -14,8 +14,8 @@ class TetrisBoard {
  public:
   TetrisBoard() {}
 
-  static const int kWidth = W;
-  static const int kHeight = H;
+  static const int kWidth;
+  static const int kHeight;
   static QSize Size() { return QSize(W, H); }
 
   void Clear();
@@ -54,6 +54,12 @@ class TetrisBoard {
   std::tr1::array<bool, W*H> cells_;
   std::tr1::array<int, W> highest_cell_;
 };
+
+template <int W, int H>
+const int TetrisBoard<W,H>::kWidth = W;
+
+template <int W, int H>
+const int TetrisBoard<W,H>::kHeight = H;
 
 template <int W, int H>
 const bool& TetrisBoard<W,H>::Cell(int x, int y) const {

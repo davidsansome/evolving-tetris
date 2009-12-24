@@ -13,13 +13,13 @@ HEADERS += individual.h \
     game.h \
     engine.h \
     population.h
-FORMS += 
+
 RESOURCES += data.qrc
 CONFIG(debug, debug|release) { 
     # Testing
     QT += testlib
-    SOURCES += test_board.cpp
-    HEADERS += test_board.h
+    SOURCES += test_board.cpp test_tetramino.cpp
+    HEADERS += test_board.h test_tetramino.h
     QMAKE_POST_LINK = ./cw3 \
         t
 }

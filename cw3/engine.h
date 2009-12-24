@@ -14,6 +14,7 @@
 DEFINE_int32(pop, 128, "number of individuals in the population");
 DEFINE_int32(games, 12, "number of games for each individual to play");
 DEFINE_int32(generations, 30, "number of generations to run for");
+DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
 DECLARE_double(mutation);
 
 template <typename BoardType>
@@ -69,11 +70,14 @@ void Engine<BoardType>::Run() {
   using std::cout;
   using std::endl;
 
+  QThreadPool::globalInstance()->setMaxThreadCount(FLAGS_threads);
+
   cout << "# Population size " << FLAGS_pop << endl;
   cout << "# Games " << FLAGS_games << endl;
   cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
   cout << "# Mutation std dev " << FLAGS_mutation << endl;
   cout << "# Running for " << FLAGS_generations << " generations" << endl;
+  cout << "# Using " << FLAGS_threads << " threads" << endl;
 
 #ifndef QT_NO_DEBUG
   cout << "# Running in debug mode with assertions enabled" << endl;

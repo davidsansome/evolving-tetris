@@ -23,8 +23,8 @@ void Board::cleanup() {
 
 void Board::Size() {
   QCOMPARE(board_->Size(), QSize(4, 4));
-  QCOMPARE(board_->Width(), 4);
-  QCOMPARE(board_->Height(), 4);
+  QCOMPARE(board_->kWidth, 4);
+  QCOMPARE(board_->kHeight, 4);
 }
 
 void Board::GetAndSet() {
