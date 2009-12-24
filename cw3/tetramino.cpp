@@ -12,7 +12,7 @@ const int Tetramino::kMaxOrientationCount = 4;
 const int Tetramino::kBlockSize = 4;
 const int Tetramino::kPointsCount = 4;
 
-boost::uniform_smallint<> Tetramino::random_range_(1, Tetramino::kTypeCount);
+boost::uniform_smallint<> Tetramino::random_range_(0, Tetramino::kTypeCount-1);
 
 Tetramino::Tetramino()
 {

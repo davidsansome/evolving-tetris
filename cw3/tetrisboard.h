@@ -272,14 +272,16 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
 
 template <int W, int H>
 QDebug operator<<(QDebug s, const TetrisBoard<W,H>& b) {
-  s.nospace() << "TetrisBoard(" << b.Width() << "x" << b.Height() << ")\n";
+  s.nospace() << "TetrisBoard(" << b.kWidth << "x" << b.kHeight << ")\n";
 
-  for (int y=0 ; y<b.Height() ; ++y) {
+  for (int y=0 ; y<b.kHeight ; ++y) {
     QString row;
-    for (int x=0 ; x<b.Width() ; ++x) {
+    row.sprintf("%2d  ", y);
+
+    for (int x=0 ; x<b.kWidth ; ++x) {
       row += b(x, y) ? "X" : "_";
     }
-    s.nospace() << y << "  " << row.toAscii().constData() << "\n";
+    s.nospace() << row.toAscii().constData() << "\n";
   }
 
   return s.space();

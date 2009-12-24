@@ -26,7 +26,7 @@ void Tetramino::TestRandomCtor() {
   // Check the sequence of tetraminos is deterministic with a given seed
   static const uint32_t seed = 42;
   static const int count = 10;
-  static const int expected[] = {6,4,1,6,1,1,5,3,6,2};
+  static const int expected[] = {5,3,0,5,0,0,4,2,5,1};
 
   boost::mt19937 rng;
 
