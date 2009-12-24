@@ -2,15 +2,26 @@
 #define ENGINE_H
 
 #include <QSize>
+#include <QtConcurrentMap>
+#include <QtDebug>
+
+#include <iostream>
+#include <gflags/gflags.h>
 
 #include "population.h"
 #include "game.h"
 
+DEFINE_int32(pop, 128, "number of individuals in the population");
+DEFINE_int32(games, 12, "number of games for each individual to play");
+DEFINE_int32(generations, 30, "number of generations to run for");
+DECLARE_double(mutation);
+
+template <typename BoardType>
 class Engine {
  public:
   Engine();
 
-  typedef Game<6, 12> GameType;
+  typedef Game<BoardType> GameType;
 
   void Run();
 
@@ -19,10 +30,6 @@ class Engine {
   static const Individual& FittestOf(const Individual& one, const Individual& two);
 
   Population pop_;
-
-  static const int kPopulationSize;
-  static const int kGamesToRun;
-  static const int kMaxGenerations;
 
   // Functor for using QtConcurrentMap with object pointers
   template <typename T, typename C>
@@ -43,5 +50,110 @@ class Engine {
     FunctionPointerType functionPointer;
   };
 };
+
+template <typename BoardType>
+Engine<BoardType>::Engine()
+    : pop_(FLAGS_pop)
+{
+}
+
+template <typename BoardType>
+const Individual& Engine<BoardType>::FittestOf(const Individual& one, const Individual& two) {
+  return (one.Fitness() > two.Fitness()) ? one : two;
+}
+
+template <typename BoardType>
+void Engine<BoardType>::Run() {
+  pop_.InitRandom();
+
+  using std::cout;
+  using std::endl;
+
+  cout << "# Population size " << FLAGS_pop << endl;
+  cout << "# Games " << FLAGS_games << endl;
+  cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
+  cout << "# Mutation std dev " << FLAGS_mutation << endl;
+  cout << "# Running for " << FLAGS_generations << " generations" << endl;
+
+#ifndef QT_NO_DEBUG
+  cout << "# Running in debug mode with assertions enabled" << endl;
+#endif
+
+  for (int generation_count=0 ; generation_count<FLAGS_generations ; ++generation_count) {
+    // Play games to get the fitness of new individuals
+    UpdateFitness();
+
+    // Show output
+    cout << generation_count << "\t" <<
+            pop_.Fittest().Fitness() << "\t" <<
+            pop_.MeanFitness() << "\t" <<
+            pop_.LeastFit().Fitness() << "\t" <<
+            pop_.Fittest().Weights()[0] << "\t" <<
+            pop_.Fittest().Weights()[1] << "\t" <<
+            pop_.Fittest().Weights()[2] << "\t" <<
+            pop_.Fittest().Weights()[3] << "\t" <<
+            pop_.Fittest().Weights()[4] << "\t" <<
+            pop_.Fittest().Weights()[5] << endl;
+
+    // Make a new population
+    Population pop2(FLAGS_pop);
+
+    for (int i=0 ; i<FLAGS_pop ; ++i) {
+      // Pick two parents from the original population
+      const Individual& parent1 = pop_.SelectFitnessProportionate();
+      const Individual& parent2 = pop_.SelectFitnessProportionate(parent1);
+
+      // Make a baby
+      Individual child;
+      child.Crossover(parent1, parent2);
+      child.Mutate();
+
+      // Put the child into the new population
+      pop2.Replace(i, child);
+    }
+
+    // Use the new population
+    pop_ = pop2;
+  }
+}
+
+template <typename BoardType>
+void Engine<BoardType>::UpdateFitness() {
+  // Create games
+  QList<GameType*> games;
+  QMap<int, GameType*> games_for_individual;
+
+  for (int i = 0 ; i < FLAGS_pop ; ++i) {
+    Individual& individual = pop_[i];
+    if (individual.HasFitness())
+      continue;
+
+    for (int j = 0 ; j < FLAGS_games ; ++j) {
+      GameType* game = new GameType(individual);
+      games << game;
+      games_for_individual.insertMulti(i, game);
+    }
+  }
+
+  if (games.isEmpty())
+    return;
+
+  // Run games
+  QFuture<void> future = QtConcurrent::map(
+      games, PointerMemberFunctionWrapper<void, GameType>(&GameType::Play));
+  future.waitForFinished();
+
+  // Update the fitness for each one
+  foreach (int individual, games_for_individual.uniqueKeys()) {
+    QList<quint64> scores;
+    foreach (const GameType* game, games_for_individual.values(individual)) {
+      scores << game->BlocksPlaced();
+    }
+
+    pop_[individual].SetFitness(scores);
+  }
+
+  qDeleteAll(games);
+}
 
 #endif // ENGINE_H

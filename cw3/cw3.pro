@@ -6,7 +6,6 @@ TEMPLATE = app
 SOURCES += main.cpp \
     individual.cpp \
     tetramino.cpp \
-    engine.cpp \
     population.cpp
 HEADERS += individual.h \
     tetrisboard.h \
@@ -26,5 +25,7 @@ CONFIG(debug, debug|release) {
 }
 
 # google-perftools
-#LIBS += -lprofiler
-#CONFIG(release):QMAKE_CXXFLAGS += -g
+# LIBS += -lprofiler
+# CONFIG(release):QMAKE_CXXFLAGS += -g
+# google-gflags
+LIBS += -lgflags

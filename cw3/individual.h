@@ -61,8 +61,6 @@ class Individual {
   // have a fitness (to implement "invalid" default constructed values).
   bool operator ==(const Individual& other) const;
 
-  static const double kStandardDeviation;
-
  private:
   QVector<int> weights_;
   QVector<double> exponents_;

@@ -14,15 +14,15 @@ class TetrisBoard {
  public:
   TetrisBoard() {}
 
+  static const int kWidth = W;
+  static const int kHeight = H;
+  static QSize Size() { return QSize(W, H); }
+
   void Clear();
   void CopyFrom(const TetrisBoard& other);
 
   void Add(const Tetramino& tetramino, int x, int y, int orientation);
   int ClearRows();
-
-  QSize Size() const { return QSize(W, H); }
-  int Width() const { return W; }
-  int Height() const { return H; }
 
   int TetraminoHeight(const Tetramino& tetramino, int x, int orientation) const;
 

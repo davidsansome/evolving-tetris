@@ -225,7 +225,8 @@ void Board::TetraminoHeight() {
   // Type 5 is:
   //  XXX
   //   X
-  Tetramino tetramino(5);
+  Tetramino tetramino;
+  tetramino.InitFrom(5);
 
   // 3x2 orientations
   QCOMPARE(board_->TetraminoHeight(tetramino, 0, 0), 2);
@@ -242,7 +243,7 @@ void Board::TetraminoHeight() {
   // XXX_
 
   // Type 3 is the square
-  tetramino = Tetramino(3);
+  tetramino.InitFrom(3);
 
   QCOMPARE(board_->TetraminoHeight(tetramino, 0, 0), 0);
   QCOMPARE(board_->TetraminoHeight(tetramino, 1, 0), 0);
@@ -255,7 +256,7 @@ void Board::TetraminoHeight() {
   // XXX_
 
   // Type 0 is the line
-  tetramino = Tetramino(0);
+  tetramino.InitFrom(0);
 
   QCOMPARE(board_->TetraminoHeight(tetramino, 0, 0), -1);
 

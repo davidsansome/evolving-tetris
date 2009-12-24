@@ -13,12 +13,10 @@
 
 class Individual;
 
-template <int W, int H>
+template <typename BoardType>
 class Game {
  public:
   Game(Individual& individual);
-
-  typedef TetrisBoard<W, H> BoardType;
 
   Individual& GetIndividual() const { return individual_; }
   BoardType& GetBoard() const { return board_; }
@@ -44,16 +42,16 @@ class Game {
 
 #include "individual.h"
 
-template <int W, int H>
-Game<W,H>::Game(Individual& individual)
+template <typename BoardType>
+Game<BoardType>::Game(Individual& individual)
     : individual_(individual),
       blocks_placed_(0)
 {
   board_.Clear();
 }
 
-template <int W, int H>
-void Game<W,H>::Play() {
+template <typename BoardType>
+void Game<BoardType>::Play() {
   // TODO: Seed engine
   random_engine_.seed();
 
@@ -66,8 +64,8 @@ void Game<W,H>::Play() {
   }
 }
 
-template <int W, int H>
-bool Game<W, H>::Step() {
+template <typename BoardType>
+bool Game<BoardType>::Step() {
   // Pick the next two tetraminos
   Tetramino tetramino1;
   Tetramino tetramino2;
@@ -87,7 +85,7 @@ bool Game<W, H>::Step() {
 
   for (int o1=0 ; o1<oc1 ; ++o1) {
     int width1 = tetramino1.Size(o1).width();
-    for (int x1=0 ; x1<=W - width1 ; ++x1) {
+    for (int x1=0 ; x1<=BoardType::kWidth - width1 ; ++x1) {
       BoardType board1;
       board1.CopyFrom(board_);
 
@@ -98,7 +96,7 @@ bool Game<W, H>::Step() {
 
       for (int o2=0 ; o2<oc2 ; ++o2) {
         int width2 = tetramino2.Size(o2).width();
-        for (int x2=0 ; x2<=W - width2 ; ++x2) {
+        for (int x2=0 ; x2<=BoardType::kWidth - width2 ; ++x2) {
           BoardType board2;
           board2.CopyFrom(board1);
 

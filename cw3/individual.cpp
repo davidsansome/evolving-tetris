@@ -5,7 +5,10 @@
 #include <limits>
 #include <algorithm>
 
-const double Individual::kStandardDeviation = 0.5;
+#include <google/gflags.h>
+
+DEFINE_double(mutation, 0.5, "standard deviation for the mutation operator");
+
 Individual::RandomGenType* Individual::sRandomGen = NULL;
 
 Individual::Individual()
@@ -15,7 +18,7 @@ Individual::Individual()
 {
   if (!sRandomGen) {
     sRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, kStandardDeviation));
+        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_mutation));
   }
 }
 
