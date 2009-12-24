@@ -7,7 +7,8 @@
 
 #include <google/gflags.h>
 
-DEFINE_double(mutation, 0.5, "standard deviation for the mutation operator");
+DEFINE_double(mstddev, 0.5, "standard deviation for the mutation operator");
+DEFINE_double(mrate, 1.0 / Individual::Criteria_Count, "probability of a gene being mutated");
 
 Individual::RandomGenType* Individual::sRandomGen = NULL;
 
@@ -18,7 +19,7 @@ Individual::Individual()
 {
   if (!sRandomGen) {
     sRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_mutation));
+        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_mstddev));
   }
 }
 
@@ -29,7 +30,7 @@ void Individual::InitRandom() {
 
 void Individual::MutateFrom(const Individual& parent) {
   std::generate(weights_.begin(), weights_.end(),
-                MutateGenerator<int>(parent.weights_.begin()));
+                MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
 }
 
 void Individual::Mutate() {

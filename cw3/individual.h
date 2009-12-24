@@ -94,11 +94,12 @@ class Individual {
    public:
     typedef typename QVector<T>::const_iterator iterator_type;
 
-    MutateGenerator(iterator_type original_it)
-        : original_it_(original_it) {}
+    MutateGenerator(double p, iterator_type original_it)
+        : p_(p), original_it_(original_it) {}
     T operator()();
 
    private:
+    double p_;
     iterator_type original_it_;
   };
 };
@@ -112,7 +113,11 @@ T Individual::RangeGenerator<T>::operator()() const {
 
 template <typename T>
 T Individual::MutateGenerator<T>::operator()() {
-  return double(*(original_it_++)) * (*sRandomGen)();
+  double r = double(qrand()) / RAND_MAX;
+  if (r < p_)
+    return double(*(original_it_++)) * (*sRandomGen)();
+  else
+    return *(original_it_++);
 }
 
 template <int W, int H>

@@ -3,6 +3,7 @@
 #include <QThreadPool>
 
 #include <google/gflags.h>
+#include <sys/time.h>
 
 #include "engine.h"
 
@@ -47,6 +48,11 @@ int main(int argc, char** argv) {
     return 0;
   }
 #endif
+
+  // Seed random number generator
+  timeval tv;
+  gettimeofday(&tv, NULL);
+  qsrand(tv.tv_usec * tv.tv_sec);
 
   if      (FLAGS_size == "5x10") Run<5,10>();
   else if (FLAGS_size == "6x12") Run<6,12>();

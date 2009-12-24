@@ -2,6 +2,7 @@
 #define ENGINE_H
 
 #include <QSize>
+#include <QTime>
 #include <QtConcurrentMap>
 #include <QtDebug>
 
@@ -15,7 +16,8 @@ DEFINE_int32(pop, 128, "number of individuals in the population");
 DEFINE_int32(games, 1, "number of games for each individual to play");
 DEFINE_int32(generations, 30, "number of generations to run for");
 DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
-DECLARE_double(mutation);
+DECLARE_double(mrate);
+DECLARE_double(mstddev);
 
 template <typename BoardType>
 class Engine {
@@ -75,7 +77,8 @@ void Engine<BoardType>::Run() {
   cout << "# Population size " << FLAGS_pop << endl;
   cout << "# Games " << FLAGS_games << endl;
   cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
-  cout << "# Mutation std dev " << FLAGS_mutation << endl;
+  cout << "# Mutation std dev " << FLAGS_mstddev << endl;
+  cout << "# Mutation rate " << FLAGS_mrate << endl;
   cout << "# Generations " << FLAGS_generations << endl;
   cout << "# Threads " << FLAGS_threads << endl;
 
@@ -83,9 +86,25 @@ void Engine<BoardType>::Run() {
   cout << "# Running in debug mode with assertions enabled" << endl;
 #endif
 
+  cout << endl;
+  cout << "Generation\t"
+          "Highest fitness\t"
+          "Mean fitness\t"
+          "Lowest fitness\t"
+          "w1\t"
+          "w2\t"
+          "w3\t"
+          "w4\t"
+          "w5\t"
+          "w6\t"
+          "Time taken" << endl;
+
   for (int generation_count=0 ; generation_count<FLAGS_generations ; ++generation_count) {
     // Play games to get the fitness of new individuals
+    QTime t;
+    t.start();
     UpdateFitness();
+    int time_taken = t.elapsed();
 
     // Show output
     cout << generation_count << "\t" <<
@@ -97,7 +116,8 @@ void Engine<BoardType>::Run() {
             pop_.Fittest().Weights()[2] << "\t" <<
             pop_.Fittest().Weights()[3] << "\t" <<
             pop_.Fittest().Weights()[4] << "\t" <<
-            pop_.Fittest().Weights()[5] << endl;
+            pop_.Fittest().Weights()[5] << "\t" <<
+            time_taken << endl;
 
     // Make a new population
     Population pop2(FLAGS_pop);
