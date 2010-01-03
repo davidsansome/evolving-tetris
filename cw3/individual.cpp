@@ -2,8 +2,11 @@
 #include "tetrisboard.h"
 #include "game.h"
 
-DEFINE_double(mstddev, 0.5, "standard deviation for the mutation operator");
+DEFINE_double(mstddev, 0.5, "standard deviation for the mutation operator on weights");
+DEFINE_double(emstddev, 0.01, "standard deviation for the mutation operator on exponents");
+DEFINE_double(dmstddev, 0.01, "standard deviation for the mutation operator on displacements");
 DEFINE_double(mrate, 1.0 / Criteria_Count, "probability of a gene being mutated");
+
 
 template <>
 void Individual<RatingAlgorithm_Linear>::CopyFrom(const Individual& other) {
@@ -41,18 +44,18 @@ void Individual<RatingAlgorithm_ExponentialWithDisplacement>::InitRandom() {
 
 template <>
 void Individual<RatingAlgorithm_Linear>::MutateFrom(const Individual& parent) {
-  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
+  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, sWeightRandomGen, parent.weights_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_Exponential>::MutateFrom(const Individual& parent) {
-  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(), MutateGenerator<double>(FLAGS_mrate, parent.exponents_.begin()));
+  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, sWeightRandomGen, parent.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), MutateGenerator<double>(FLAGS_mrate, sExponentRandomGen, parent.exponents_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_ExponentialWithDisplacement>::MutateFrom(const Individual& parent) {
-  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(), MutateGenerator<double>(FLAGS_mrate, parent.exponents_.begin()));
-  std::generate(displacements_.begin(), displacements_.end(), MutateGenerator<double>(FLAGS_mrate, parent.displacements_.begin()));
+  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, sWeightRandomGen, parent.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), MutateGenerator<double>(FLAGS_mrate, sExponentRandomGen, parent.exponents_.begin()));
+  std::generate(displacements_.begin(), displacements_.end(), MutateGenerator<double>(FLAGS_mrate, sDisplacementRandomGen, parent.displacements_.begin()));
 }
 
 
@@ -148,14 +151,38 @@ template <>
 const char* Individual<RatingAlgorithm_Linear>::NameOfAlgorithm() {
   return "Linear";
 }
-
 template <>
 const char* Individual<RatingAlgorithm_Exponential>::NameOfAlgorithm() {
   return "Exponential";
 }
-
 template <>
 const char* Individual<RatingAlgorithm_ExponentialWithDisplacement>::NameOfAlgorithm() {
   return "Exponential with displacement";
+}
+
+template <>
+bool Individual<RatingAlgorithm_Linear>::HasExponents() {
+  return false;
+}
+template <>
+bool Individual<RatingAlgorithm_Exponential>::HasExponents() {
+  return true;
+}
+template <>
+bool Individual<RatingAlgorithm_ExponentialWithDisplacement>::HasExponents() {
+  return true;
+}
+
+template <>
+bool Individual<RatingAlgorithm_Linear>::HasDisplacements() {
+  return false;
+}
+template <>
+bool Individual<RatingAlgorithm_Exponential>::HasDisplacements() {
+  return false;
+}
+template <>
+bool Individual<RatingAlgorithm_ExponentialWithDisplacement>::HasDisplacements() {
+  return true;
 }
 

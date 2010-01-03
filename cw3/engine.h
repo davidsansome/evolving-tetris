@@ -19,6 +19,8 @@ DEFINE_int32(generations, 30, "number of generations to run for");
 DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
 DECLARE_double(mrate);
 DECLARE_double(mstddev);
+DECLARE_double(emstddev);
+DECLARE_double(dmstddev);
 
 template <typename IndividualType, typename BoardType>
 class Engine {
@@ -78,7 +80,11 @@ void Engine<IndividualType, BoardType>::Run() {
   cout << "# Population size " << FLAGS_pop << endl;
   cout << "# Games " << FLAGS_games << endl;
   cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
-  cout << "# Mutation std dev " << FLAGS_mstddev << endl;
+  cout << "# Mutation std dev (weights) " << FLAGS_mstddev << endl;
+  if (IndividualType::HasExponents())
+    cout << "# Mutation std dev (exponents) " << FLAGS_emstddev << endl;
+  if (IndividualType::HasDisplacements())
+    cout << "# Mutation std dev (displacements) " << FLAGS_dmstddev << endl;
   cout << "# Mutation rate " << FLAGS_mrate << endl;
   cout << "# Generations " << FLAGS_generations << endl;
   cout << "# Threads " << FLAGS_threads << endl;
@@ -93,8 +99,18 @@ void Engine<IndividualType, BoardType>::Run() {
           "Highest fitness\t"
           "Mean fitness\t"
           "Lowest fitness\t";
+
   for (int i=0 ; i<Criteria_Count ; ++i)
     cout << "w" << i << "\t";
+
+  if (IndividualType::HasExponents())
+    for (int i=0 ; i<Criteria_Count ; ++i)
+      cout << "e" << i << "\t";
+
+  if (IndividualType::HasDisplacements())
+    for (int i=0 ; i<Criteria_Count ; ++i)
+      cout << "d" << i << "\t";
+
   cout << "Time taken" << endl;
 
   for (int generation_count=0 ; generation_count<FLAGS_generations ; ++generation_count) {
@@ -109,8 +125,18 @@ void Engine<IndividualType, BoardType>::Run() {
             pop_.Fittest().Fitness() << "\t" <<
             pop_.MeanFitness() << "\t" <<
             pop_.LeastFit().Fitness() << "\t";
+
     for (int i=0 ; i<Criteria_Count ; ++i)
       cout << pop_.Fittest().Weights()[i] << "\t";
+
+    if (IndividualType::HasExponents())
+      for (int i=0 ; i<Criteria_Count ; ++i)
+        cout << pop_.Fittest().Exponents()[i] << "\t";
+
+    if (IndividualType::HasDisplacements())
+      for (int i=0 ; i<Criteria_Count ; ++i)
+        cout << pop_.Fittest().Displacements()[i] << "\t";
+
     cout << time_taken << endl;
 
     // Make a new population

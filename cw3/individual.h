@@ -43,7 +43,8 @@ enum Criteria {
 };
 
 DECLARE_double(mstddev);
-DECLARE_double(mrate);
+DECLARE_double(emstddev);
+DECLARE_double(dmstddev);
 
 
 template <RatingAlgorithm A>
@@ -55,6 +56,8 @@ class Individual {
   typedef std::tr1::array<double, Criteria_Count> RealGenes;
 
   static const char* NameOfAlgorithm();
+  static bool HasExponents();
+  static bool HasDisplacements();
 
   // Creating a new individual
   void InitRandom();
@@ -95,7 +98,9 @@ class Individual {
 
   typedef boost::variate_generator<
       boost::mt19937, boost::normal_distribution<double> > RandomGenType;
-  static RandomGenType* sRandomGen;
+  static RandomGenType* sWeightRandomGen;
+  static RandomGenType* sExponentRandomGen;
+  static RandomGenType* sDisplacementRandomGen;
 
   // The specialisations of this function use our weights, exponents and
   // displacements to find a rating for a BoardStats struct
@@ -123,13 +128,14 @@ class Individual {
    public:
     typedef const T* iterator_type;
 
-    MutateGenerator(double p, iterator_type original_it)
-        : p_(p), original_it_(original_it) {}
+    MutateGenerator(double p, RandomGenType* gen, iterator_type original_it)
+        : p_(p), original_it_(original_it), gen_(gen) {}
     T operator()();
 
    private:
     double p_;
     iterator_type original_it_;
+    RandomGenType* gen_;
   };
 
   template <typename T>
@@ -154,7 +160,11 @@ template <RatingAlgorithm A>
 QDebug operator<<(QDebug s, const Individual<A>& i);
 
 template <RatingAlgorithm A>
-typename Individual<A>::RandomGenType* Individual<A>::sRandomGen = NULL;
+typename Individual<A>::RandomGenType* Individual<A>::sWeightRandomGen = NULL;
+template <RatingAlgorithm A>
+typename Individual<A>::RandomGenType* Individual<A>::sExponentRandomGen = NULL;
+template <RatingAlgorithm A>
+typename Individual<A>::RandomGenType* Individual<A>::sDisplacementRandomGen = NULL;
 
 
 template <RatingAlgorithm A>
@@ -162,9 +172,13 @@ Individual<A>::Individual()
     : has_fitness_(false),
       fitness_(0)
 {
-  if (!sRandomGen) {
-    sRandomGen = new RandomGenType(
+  if (!sWeightRandomGen) {
+    sWeightRandomGen = new RandomGenType(
         boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_mstddev));
+    sExponentRandomGen = new RandomGenType(
+        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_emstddev));
+    sDisplacementRandomGen = new RandomGenType(
+        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_dmstddev));
   }
 }
 
@@ -205,7 +219,7 @@ template <typename T>
 T Individual<A>::MutateGenerator<T>::operator()() {
   double r = double(qrand()) / RAND_MAX;
   if (r < p_)
-    return double(*(original_it_++)) * (*sRandomGen)();
+    return double(*(original_it_++)) * (*gen_)();
   else
     return *(original_it_++);
 }
@@ -215,8 +229,7 @@ template <typename T>
 T Individual<A>::CrossoverGenerator<T>::operator()() {
   T ret = (qrand() % 2) ? *a_ : *b_;
 
-  ++ a_;
-  ++ b_;
+  ++ a_; ++ b_;
   return ret;
 }
 
