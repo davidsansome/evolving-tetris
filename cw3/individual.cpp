@@ -13,8 +13,7 @@ DEFINE_double(mrate, 1.0 / Individual::Criteria_Count, "probability of a gene be
 Individual::RandomGenType* Individual::sRandomGen = NULL;
 
 Individual::Individual()
-    : weights_(Criteria_Count),
-      has_fitness_(false),
+    : has_fitness_(false),
       fitness_(0)
 {
   if (!sRandomGen) {
@@ -71,6 +70,60 @@ bool Individual::operator ==(const Individual& other) const {
   if (fitness_ != other.fitness_)
     return false;
   return weights_ == other.weights_;
+}
+
+template <>
+double Individual::Rating<Individual::Linear>(const BoardStats& stats) const {
+  auto stats_it = stats.begin();
+  auto weights_it = weights_.begin();
+
+  double ret = 0.0;
+  while (stats_it != stats.end()) {
+    ret += *weights_it * *stats_it;
+
+    stats_it ++;
+    weights_it ++;
+  }
+
+  return ret;
+}
+
+template <>
+double Individual::Rating<Individual::Exponential>(const BoardStats& stats) const {
+  auto stats_it = stats.begin();
+  auto weights_it = weights_.begin();
+  auto exponent_it = exponents_.begin();
+
+  double ret = 0.0;
+  while (stats_it != stats.end()) {
+    ret += *weights_it * pow(*stats_it, *exponent_it);
+
+    stats_it ++;
+    weights_it ++;
+    exponent_it ++;
+  }
+
+  return ret;
+}
+
+template <>
+double Individual::Rating<Individual::ExponentialWithDisplacement>(const BoardStats& stats) const {
+  auto stats_it = stats.begin();
+  auto weights_it = weights_.begin();
+  auto exponent_it = exponents_.begin();
+  auto displacement_it = displacements_.begin();
+
+  double ret = 0.0;
+  while (stats_it != stats.end()) {
+    ret += *weights_it * pow(*stats_it - *displacement_it, *exponent_it);
+
+    stats_it ++;
+    weights_it ++;
+    exponent_it ++;
+    displacement_it ++;
+  }
+
+  return ret;
 }
 
 QDebug operator<<(QDebug s, const Individual& i) {

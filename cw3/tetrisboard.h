@@ -9,17 +9,24 @@
 #include <algorithm>
 #include <tr1/array>
 
+// Fields need to be in the same order as Individual::Criteria
 struct BoardStats {
+  const int* begin() const { return &pile_height; }
+
   int pile_height;
   int holes;
   int connected_holes;
+  int removed_lines; // Set by Individual::Rating
   int altitude_difference;
   int max_well_depth;
   int sum_well_depth;
+  int landing_height; // Set by Individual::Rating
   int total_blocks;
   int weighted_blocks;
   int row_transitions;
   int column_transitions;
+
+  const int* end() const { return &column_transitions; }
 };
 
 template <int W = 10, int H = 20>

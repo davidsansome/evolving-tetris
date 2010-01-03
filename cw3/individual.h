@@ -4,6 +4,8 @@
 #include <QVector>
 #include <QtDebug>
 
+#include <tr1/array>
+
 #include <cstdlib>
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/normal_distribution.hpp>
@@ -20,7 +22,7 @@ class Individual {
   enum Algorithm {
     Linear,
     Exponential,
-    ExponentialWithDisplacement
+    ExponentialWithDisplacement,
   };
 
   enum Criteria {
@@ -37,8 +39,11 @@ class Individual {
     RowTransitions,
     ColumnTransitions,
 
-    Criteria_Count
+    Criteria_Count,
   };
+
+  typedef std::tr1::array<int, Criteria_Count> IntegerGenes;
+  typedef std::tr1::array<double, Criteria_Count> RealGenes;
 
   // Creating a new individual
   void InitRandom();
@@ -50,11 +55,11 @@ class Individual {
   void Mutate();
 
   // Get the weights for this individual
-  QVector<int> Weights() const { return weights_; }
+  IntegerGenes Weights() const { return weights_; }
 
   // Adds the given tetramino to this board and computes a score based on
   // this individual's weightings
-  template <int W, int H>
+  template <Algorithm A = Linear, int W, int H>
   double Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
                 int x, int orientation) const;
 
@@ -68,15 +73,20 @@ class Individual {
   bool operator ==(const Individual& other) const;
 
  private:
-  QVector<int> weights_;
-  QVector<double> exponents_;
-  QVector<double> displacements_;
+  IntegerGenes weights_;
+  RealGenes exponents_;
+  RealGenes displacements_;
   bool has_fitness_;
   quint64 fitness_;
 
   typedef boost::variate_generator<
       boost::mt19937, boost::normal_distribution<double> > RandomGenType;
   static RandomGenType* sRandomGen;
+
+  // These functions use our weights, exponents and displacements to find a
+  // rating for a BoardStats struct
+  template <Algorithm A>
+  double Rating(const BoardStats& stats) const;
 
   // These generators are compatiable with std::generate from <algorithms>.
   // They are used to set new values for an individual.
@@ -110,7 +120,13 @@ class Individual {
   };
 };
 
+template <typename T, std::size_t N>
+QDebug operator<<(QDebug s, const std::tr1::array<T, N>& a);
+
 QDebug operator<<(QDebug s, const Individual& i);
+
+
+
 
 template <typename T>
 T Individual::RangeGenerator<T>::operator()() const {
@@ -126,10 +142,10 @@ T Individual::MutateGenerator<T>::operator()() {
     return *(original_it_++);
 }
 
-template <int W, int H>
+template <Individual::Algorithm A, int W, int H>
 double Individual::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
                           int x, int orientation) const {
-  Q_ASSERT(weights_.count() == Criteria_Count);
+  Q_ASSERT(weights_.size() == Criteria_Count);
 
   int y = board.TetraminoHeight(tetramino, x, orientation);
 
@@ -138,30 +154,29 @@ double Individual::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
     return std::numeric_limits<double>::quiet_NaN();
   }
 
-  int landing_height = y + tetramino.Size(orientation).height();
-
   // Add the tetramino to the board
   board.Add(tetramino, x, y, orientation);
 
-  // Count the rows that were removed by adding this tetramino
-  int removed_lines = board.ClearRows();
-
   BoardStats stats;
+  stats.landing_height = y + tetramino.Size(orientation).height();
+
+  // Count the rows that were removed by adding this tetramino
+  stats.removed_lines = board.ClearRows();
+
   board.Analyse(&stats);
 
-  return
-      weights_[PileHeight] * stats.pile_height +
-      weights_[Holes] * stats.holes +
-      weights_[ConnectedHoles] * stats.connected_holes +
-      weights_[RemovedLines] * removed_lines +
-      weights_[AltitudeDifference] * stats.altitude_difference +
-      weights_[MaxWellDepth] * stats.max_well_depth +
-      weights_[SumWellDepth] * stats.sum_well_depth +
-      weights_[LandingHeight] * landing_height +
-      weights_[Blocks] * stats.total_blocks +
-      weights_[WeightedBlocks] * stats.weighted_blocks +
-      weights_[RowTransitions] * stats.row_transitions +
-      weights_[ColumnTransitions] * stats.column_transitions;
+  return Rating<A>(stats);
+}
+
+template <typename T, std::size_t N>
+QDebug operator<<(QDebug s, const std::tr1::array<T, N>& a) {
+  s.nospace() << "(";
+  for (auto it = a.begin() ; it != a.end() ; ++it) {
+    s.nospace() << *it << ", ";
+  }
+  s.nospace() << ")";
+
+  return s.maybeSpace();
 }
 
 #endif // INDIVIDUAL_H
