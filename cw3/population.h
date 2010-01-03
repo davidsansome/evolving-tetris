@@ -2,6 +2,7 @@
 #define POPULATION_H
 
 #include "individual.h"
+#include "utilities.h"
 
 #include <QList>
 
@@ -21,6 +22,8 @@ class Population {
   IndividualType& Fittest();
   IndividualType& LeastFit();
   quint64 MeanFitness() const;
+
+  double Diversity() const;
 
   void Replace(int i, const IndividualType& replacement);
 
@@ -73,6 +76,19 @@ quint64 Population<IndividualType>::MeanFitness() const {
     total_fitness += i.Fitness();
   }
   return total_fitness / individuals_.count();
+}
+
+template <typename IndividualType>
+double Population<IndividualType>::Diversity() const {
+  int diversity = 0;
+  for (int i=0 ; i<Criteria_Count ; ++i) {
+    QVector<int> genes;
+    foreach (const IndividualType& individual, individuals_) {
+      genes << individual.Weights()[i];
+    }
+    diversity += Utilities::StandardDeviation(genes);
+  }
+  return double(diversity) / Criteria_Count;
 }
 
 template <typename IndividualType>

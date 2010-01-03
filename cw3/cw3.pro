@@ -11,7 +11,8 @@ HEADERS += individual.h \
     tetramino.h \
     game.h \
     engine.h \
-    population.h
+    population.h \
+    utilities.h
 RESOURCES += data.qrc
 
 CONFIG(debug, debug|release) { 
