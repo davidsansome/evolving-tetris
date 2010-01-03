@@ -111,8 +111,13 @@ void Engine<IndividualType, BoardType>::Run() {
     for (int i=0 ; i<Criteria_Count ; ++i)
       cout << "d" << i << "\t";
 
-  cout << "Time\t" <<
-          "Diversity" << endl;
+  cout << "Time\t"
+       << "sd-w";
+  if (IndividualType::HasExponents())
+    cout << "\tsd-e";
+  if (IndividualType::HasDisplacements())
+    cout << "\tsd-d";
+  cout << endl;
 
   cout.precision(3);
 
@@ -141,7 +146,13 @@ void Engine<IndividualType, BoardType>::Run() {
         cout << pop_.Fittest().Displacements()[i] << "\t";
 
     cout << time_taken << "\t" <<
-            pop_.Diversity() << endl;
+            pop_.WeightDiversity();
+
+    if (IndividualType::HasExponents())
+      cout << "\t" << pop_.ExponentDiversity();
+    if (IndividualType::HasDisplacements())
+      cout << "\t" << pop_.DisplacementDiversity();
+    cout << endl;
 
     // Make a new population
     Population<IndividualType> pop2(FLAGS_pop);

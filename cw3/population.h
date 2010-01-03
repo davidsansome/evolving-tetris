@@ -23,7 +23,9 @@ class Population {
   IndividualType& LeastFit();
   quint64 MeanFitness() const;
 
-  double Diversity() const;
+  double WeightDiversity() const;
+  double ExponentDiversity() const;
+  double DisplacementDiversity() const;
 
   void Replace(int i, const IndividualType& replacement);
 
@@ -79,12 +81,38 @@ quint64 Population<IndividualType>::MeanFitness() const {
 }
 
 template <typename IndividualType>
-double Population<IndividualType>::Diversity() const {
+double Population<IndividualType>::WeightDiversity() const {
   int diversity = 0;
   for (int i=0 ; i<Criteria_Count ; ++i) {
     QVector<int> genes;
     foreach (const IndividualType& individual, individuals_) {
       genes << individual.Weights()[i];
+    }
+    diversity += Utilities::StandardDeviation(genes);
+  }
+  return double(diversity) / Criteria_Count;
+}
+
+template <typename IndividualType>
+double Population<IndividualType>::ExponentDiversity() const {
+  double diversity = 0;
+  for (int i=0 ; i<Criteria_Count ; ++i) {
+    QVector<double> genes;
+    foreach (const IndividualType& individual, individuals_) {
+      genes << individual.Exponents()[i];
+    }
+    diversity += Utilities::StandardDeviation(genes);
+  }
+  return double(diversity) / Criteria_Count;
+}
+
+template <typename IndividualType>
+double Population<IndividualType>::DisplacementDiversity() const {
+  double diversity = 0;
+  for (int i=0 ; i<Criteria_Count ; ++i) {
+    QVector<double> genes;
+    foreach (const IndividualType& individual, individuals_) {
+      genes << individual.Displacements()[i];
     }
     diversity += Utilities::StandardDeviation(genes);
   }
