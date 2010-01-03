@@ -25,20 +25,20 @@ DEFINE_string(size, "6x12", "board size");
   }
 #endif
 
-template <Individual::Algorithm A, int W, int H>
+template <typename IndividualType, int W, int H>
 void Run2() {
-  Engine<A, TetrisBoard<W, H> > e;
+  Engine<IndividualType, TetrisBoard<W, H> > e;
   e.Run();
 }
 
 template <int W, int H>
 void Run() {
   if (FLAGS_algo == "l")
-    Run2<Individual::Linear, W, H>();
+    Run2<Individual<RatingAlgorithm_Linear>, W, H>();
   else if (FLAGS_algo == "e")
-    Run2<Individual::Exponential, W, H>();
+    Run2<Individual<RatingAlgorithm_Exponential>, W, H>();
   else if (FLAGS_algo == "ed")
-    Run2<Individual::ExponentialWithDisplacement, W, H>();
+    Run2<Individual<RatingAlgorithm_ExponentialWithDisplacement>, W, H>();
   else
     qFatal("Unknown algorithm %s", FLAGS_algo.c_str());
 }

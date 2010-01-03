@@ -2,78 +2,96 @@
 #include "tetrisboard.h"
 #include "game.h"
 
-#include <limits>
-#include <algorithm>
-
-#include <google/gflags.h>
-
 DEFINE_double(mstddev, 0.5, "standard deviation for the mutation operator");
-DEFINE_double(mrate, 1.0 / Individual::Criteria_Count, "probability of a gene being mutated");
-
-Individual::RandomGenType* Individual::sRandomGen = NULL;
-
-Individual::Individual()
-    : has_fitness_(false),
-      fitness_(0)
-{
-  if (!sRandomGen) {
-    sRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_mstddev));
-  }
-}
-
-void Individual::InitRandom() {
-  std::generate(weights_.begin(), weights_.end(),
-                RangeGenerator<int>(-1000, 1000));
-}
-
-void Individual::MutateFrom(const Individual& parent) {
-  std::generate(weights_.begin(), weights_.end(),
-                MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
-}
-
-void Individual::Mutate() {
-  MutateFrom(*this);
-}
-
-void Individual::CopyFrom(const Individual& other) {
-  weights_ = other.weights_;
-}
-
-void Individual::Crossover(const Individual& one, const Individual& two) {
-  QVector<int>::const_iterator one_it = one.weights_.begin();
-  QVector<int>::const_iterator two_it = two.weights_.begin();
-  QVector<int>::iterator my_it = weights_.begin();
-
-  while (my_it != weights_.end()) {
-    *(my_it) = (rand() % 2) ? *one_it : *two_it;
-
-    my_it ++;
-    one_it ++;
-    two_it ++;
-  }
-}
-
-void Individual::SetFitness(QList<quint64> games) {
-  quint64 running_total = 0;
-
-  foreach (quint64 game, games) {
-    running_total += game;
-  }
-  fitness_ = float(running_total) / games.count();
-  has_fitness_ = true;
-}
-
-bool Individual::operator ==(const Individual& other) const {
-  if (!has_fitness_ || !other.has_fitness_)
-    return false;
-  if (fitness_ != other.fitness_)
-    return false;
-  return weights_ == other.weights_;
-}
+DEFINE_double(mrate, 1.0 / Criteria_Count, "probability of a gene being mutated");
 
 template <>
-double Individual::Rating<Individual::Linear>(const BoardStats& stats) const {
+void Individual<RatingAlgorithm_Linear>::CopyFrom(const Individual& other) {
+  weights_ = other.weights_;
+}
+template <>
+void Individual<RatingAlgorithm_Exponential>::CopyFrom(const Individual& other) {
+  weights_ = other.weights_;
+  exponents_ = other.exponents_;
+}
+template <>
+void Individual<RatingAlgorithm_ExponentialWithDisplacement>::CopyFrom(const Individual& other) {
+  weights_ = other.weights_;
+  exponents_ = other.exponents_;
+  displacements_ = other.displacements_;
+}
+
+
+template <>
+void Individual<RatingAlgorithm_Linear>::InitRandom() {
+  std::generate(weights_.begin(), weights_.end(), RangeGenerator<int>(-1000, 1000));
+}
+template <>
+void Individual<RatingAlgorithm_Exponential>::InitRandom() {
+  std::generate(weights_.begin(), weights_.end(), RangeGenerator<int>(-1000, 1000));
+  std::generate(exponents_.begin(), exponents_.end(), RangeGenerator<double>(-2.0, 2.0));
+}
+template <>
+void Individual<RatingAlgorithm_ExponentialWithDisplacement>::InitRandom() {
+  std::generate(weights_.begin(), weights_.end(), RangeGenerator<int>(-1000, 1000));
+  std::generate(exponents_.begin(), exponents_.end(), RangeGenerator<double>(-2.0, 2.0));
+  std::generate(displacements_.begin(), displacements_.end(), RangeGenerator<double>(-10.0, 10.0));
+}
+
+
+template <>
+void Individual<RatingAlgorithm_Linear>::MutateFrom(const Individual& parent) {
+  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
+}
+template <>
+void Individual<RatingAlgorithm_Exponential>::MutateFrom(const Individual& parent) {
+  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), MutateGenerator<double>(FLAGS_mrate, parent.exponents_.begin()));
+}
+template <>
+void Individual<RatingAlgorithm_ExponentialWithDisplacement>::MutateFrom(const Individual& parent) {
+  std::generate(weights_.begin(), weights_.end(), MutateGenerator<int>(FLAGS_mrate, parent.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), MutateGenerator<double>(FLAGS_mrate, parent.exponents_.begin()));
+  std::generate(displacements_.begin(), displacements_.end(), MutateGenerator<double>(FLAGS_mrate, parent.displacements_.begin()));
+}
+
+
+template <>
+void Individual<RatingAlgorithm_Linear>::Crossover(const Individual& one, const Individual& two) {
+  std::generate(weights_.begin(), weights_.end(), CrossoverGenerator<int>(one.weights_.begin(), two.weights_.begin()));
+}
+template <>
+void Individual<RatingAlgorithm_Exponential>::Crossover(const Individual& one, const Individual& two) {
+  std::generate(weights_.begin(), weights_.end(), CrossoverGenerator<int>(one.weights_.begin(), two.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), CrossoverGenerator<double>(one.exponents_.begin(), two.exponents_.begin()));
+}
+template <>
+void Individual<RatingAlgorithm_ExponentialWithDisplacement>::Crossover(const Individual& one, const Individual& two) {
+  std::generate(weights_.begin(), weights_.end(), CrossoverGenerator<int>(one.weights_.begin(), two.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), CrossoverGenerator<double>(one.exponents_.begin(), two.exponents_.begin()));
+  std::generate(displacements_.begin(), displacements_.end(), CrossoverGenerator<double>(one.displacements_.begin(), two.displacements_.begin()));
+}
+
+
+template <>
+bool Individual<RatingAlgorithm_Linear>::CompareGenes(const Individual& other) const {
+  return weights_ == other.weights_;
+}
+template <>
+bool Individual<RatingAlgorithm_Exponential>::CompareGenes(const Individual& other) const {
+  return weights_ == other.weights_ &&
+         exponents_ == other.exponents_;
+}
+template <>
+bool Individual<RatingAlgorithm_ExponentialWithDisplacement>::CompareGenes(const Individual& other) const {
+  return weights_ == other.weights_ &&
+         exponents_ == other.exponents_ &&
+         displacements_ == other.displacements_;
+}
+
+
+template <>
+double Individual<RatingAlgorithm_Linear>::Rating(const BoardStats& stats) const {
   auto stats_it = stats.begin();
   auto weights_it = weights_.begin();
 
@@ -89,7 +107,7 @@ double Individual::Rating<Individual::Linear>(const BoardStats& stats) const {
 }
 
 template <>
-double Individual::Rating<Individual::Exponential>(const BoardStats& stats) const {
+double Individual<RatingAlgorithm_Exponential>::Rating(const BoardStats& stats) const {
   auto stats_it = stats.begin();
   auto weights_it = weights_.begin();
   auto exponent_it = exponents_.begin();
@@ -107,7 +125,7 @@ double Individual::Rating<Individual::Exponential>(const BoardStats& stats) cons
 }
 
 template <>
-double Individual::Rating<Individual::ExponentialWithDisplacement>(const BoardStats& stats) const {
+double Individual<RatingAlgorithm_ExponentialWithDisplacement>::Rating(const BoardStats& stats) const {
   auto stats_it = stats.begin();
   auto weights_it = weights_.begin();
   auto exponent_it = exponents_.begin();
@@ -127,21 +145,17 @@ double Individual::Rating<Individual::ExponentialWithDisplacement>(const BoardSt
 }
 
 template <>
-const char* Individual::NameOfAlgorithm<Individual::Linear>() {
+const char* Individual<RatingAlgorithm_Linear>::NameOfAlgorithm() {
   return "Linear";
 }
 
 template <>
-const char* Individual::NameOfAlgorithm<Individual::Exponential>() {
+const char* Individual<RatingAlgorithm_Exponential>::NameOfAlgorithm() {
   return "Exponential";
 }
 
 template <>
-const char* Individual::NameOfAlgorithm<Individual::ExponentialWithDisplacement>() {
+const char* Individual<RatingAlgorithm_ExponentialWithDisplacement>::NameOfAlgorithm() {
   return "Exponential with displacement";
 }
 
-QDebug operator<<(QDebug s, const Individual& i) {
-  return s.space() << (i.HasFitness() ? QString::number(i.Fitness()).toAscii().constData() : "??")
-                   << "-" << i.Weights();
-}

@@ -11,14 +11,12 @@
 #include <math.h>
 #include <boost/random/mersenne_twister.hpp>
 
-class Individual;
-
-template <Individual::Algorithm A, typename BoardType>
+template <typename IndividualType, typename BoardType>
 class Game {
  public:
-  Game(Individual& individual);
+  Game(IndividualType& individual);
 
-  Individual& GetIndividual() const { return individual_; }
+  IndividualType& GetIndividual() const { return individual_; }
   BoardType& GetBoard() const { return board_; }
 
   // Plays a game of tetris, finishing when there's no room for any more blocks
@@ -30,7 +28,7 @@ class Game {
  private:
   bool Step();
 
-  Individual& individual_;
+  IndividualType& individual_;
 
   BoardType board_;
   Tetramino next_tetramino_;
@@ -42,16 +40,16 @@ class Game {
 
 #include "individual.h"
 
-template <Individual::Algorithm A, typename BoardType>
-Game<A, BoardType>::Game(Individual& individual)
+template <typename IndividualType, typename BoardType>
+Game<IndividualType, BoardType>::Game(IndividualType& individual)
     : individual_(individual),
       blocks_placed_(0)
 {
   board_.Clear();
 }
 
-template <Individual::Algorithm A, typename BoardType>
-void Game<A, BoardType>::Play() {
+template <typename IndividualType, typename BoardType>
+void Game<IndividualType, BoardType>::Play() {
   // TODO: Seed engine
   random_engine_.seed();
 
@@ -64,8 +62,8 @@ void Game<A, BoardType>::Play() {
   }
 }
 
-template <Individual::Algorithm A, typename BoardType>
-bool Game<A, BoardType>::Step() {
+template <typename IndividualType, typename BoardType>
+bool Game<IndividualType, BoardType>::Step() {
   // Pick the next two tetraminos
   Tetramino tetramino1;
   Tetramino tetramino2;
@@ -90,7 +88,7 @@ bool Game<A, BoardType>::Step() {
       board1.CopyFrom(board_);
 
       // Add this first tetramino to the new board
-      double score1 = individual_.Rating<A>(board1, tetramino1, x1, o1);
+      double score1 = individual_.Rating(board1, tetramino1, x1, o1);
       if (isnan(score1))
         continue;
 
@@ -101,7 +99,7 @@ bool Game<A, BoardType>::Step() {
           board2.CopyFrom(board1);
 
           // Add the second tetramino to the board
-          double score2 = individual_.Rating<A>(board2, tetramino2, x2, o2);
+          double score2 = individual_.Rating(board2, tetramino2, x2, o2);
           if (isnan(score2))
             continue;
 

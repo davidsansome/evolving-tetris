@@ -5,8 +5,7 @@ TARGET = cw3
 TEMPLATE = app
 SOURCES += main.cpp \
     individual.cpp \
-    tetramino.cpp \
-    population.cpp
+    tetramino.cpp
 HEADERS += individual.h \
     tetrisboard.h \
     tetramino.h \

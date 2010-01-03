@@ -20,20 +20,20 @@ DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
 DECLARE_double(mrate);
 DECLARE_double(mstddev);
 
-template <Individual::Algorithm A, typename BoardType>
+template <typename IndividualType, typename BoardType>
 class Engine {
  public:
   Engine();
 
-  typedef Game<A, BoardType> GameType;
+  typedef Game<IndividualType, BoardType> GameType;
 
   void Run();
 
  private:
   void UpdateFitness();
-  static const Individual& FittestOf(const Individual& one, const Individual& two);
+  static const IndividualType& FittestOf(const IndividualType& one, const IndividualType& two);
 
-  Population pop_;
+  Population<IndividualType> pop_;
 
   // Functor for using QtConcurrentMap with object pointers
   template <typename T, typename C>
@@ -55,19 +55,19 @@ class Engine {
   };
 };
 
-template <Individual::Algorithm A, typename BoardType>
-Engine<A, BoardType>::Engine()
+template <typename IndividualType, typename BoardType>
+Engine<IndividualType, BoardType>::Engine()
     : pop_(FLAGS_pop)
 {
 }
 
-template <Individual::Algorithm A, typename BoardType>
-const Individual& Engine<A, BoardType>::FittestOf(const Individual& one, const Individual& two) {
+template <typename IndividualType, typename BoardType>
+const IndividualType& Engine<IndividualType, BoardType>::FittestOf(const IndividualType& one, const IndividualType& two) {
   return (one.Fitness() > two.Fitness()) ? one : two;
 }
 
-template <Individual::Algorithm A, typename BoardType>
-void Engine<A, BoardType>::Run() {
+template <typename IndividualType, typename BoardType>
+void Engine<IndividualType, BoardType>::Run() {
   pop_.InitRandom();
 
   using std::cout;
@@ -82,7 +82,7 @@ void Engine<A, BoardType>::Run() {
   cout << "# Mutation rate " << FLAGS_mrate << endl;
   cout << "# Generations " << FLAGS_generations << endl;
   cout << "# Threads " << FLAGS_threads << endl;
-  cout << "# Board rating function " << Individual::NameOfAlgorithm<A>() << endl;
+  cout << "# Board rating function " << IndividualType::NameOfAlgorithm() << endl;
 
 #ifndef QT_NO_DEBUG
   cout << "# Running in debug mode with assertions enabled" << endl;
@@ -92,14 +92,10 @@ void Engine<A, BoardType>::Run() {
   cout << "Generation\t"
           "Highest fitness\t"
           "Mean fitness\t"
-          "Lowest fitness\t"
-          "w1\t"
-          "w2\t"
-          "w3\t"
-          "w4\t"
-          "w5\t"
-          "w6\t"
-          "Time taken" << endl;
+          "Lowest fitness\t";
+  for (int i=0 ; i<Criteria_Count ; ++i)
+    cout << "w" << i << "\t";
+  cout << "Time taken" << endl;
 
   for (int generation_count=0 ; generation_count<FLAGS_generations ; ++generation_count) {
     // Play games to get the fitness of new individuals
@@ -112,25 +108,21 @@ void Engine<A, BoardType>::Run() {
     cout << generation_count << "\t" <<
             pop_.Fittest().Fitness() << "\t" <<
             pop_.MeanFitness() << "\t" <<
-            pop_.LeastFit().Fitness() << "\t" <<
-            pop_.Fittest().Weights()[0] << "\t" <<
-            pop_.Fittest().Weights()[1] << "\t" <<
-            pop_.Fittest().Weights()[2] << "\t" <<
-            pop_.Fittest().Weights()[3] << "\t" <<
-            pop_.Fittest().Weights()[4] << "\t" <<
-            pop_.Fittest().Weights()[5] << "\t" <<
-            time_taken << endl;
+            pop_.LeastFit().Fitness() << "\t";
+    for (int i=0 ; i<Criteria_Count ; ++i)
+      cout << pop_.Fittest().Weights()[i] << "\t";
+    cout << time_taken << endl;
 
     // Make a new population
-    Population pop2(FLAGS_pop);
+    Population<IndividualType> pop2(FLAGS_pop);
 
     for (int i=0 ; i<FLAGS_pop ; ++i) {
       // Pick two parents from the original population
-      const Individual& parent1 = pop_.SelectFitnessProportionate();
-      const Individual& parent2 = pop_.SelectFitnessProportionate(parent1);
+      const IndividualType& parent1 = pop_.SelectFitnessProportionate();
+      const IndividualType& parent2 = pop_.SelectFitnessProportionate(parent1);
 
       // Make a baby
-      Individual child;
+      IndividualType child;
       child.Crossover(parent1, parent2);
       child.Mutate();
 
@@ -143,14 +135,14 @@ void Engine<A, BoardType>::Run() {
   }
 }
 
-template <Individual::Algorithm A, typename BoardType>
-void Engine<A, BoardType>::UpdateFitness() {
+template <typename IndividualType, typename BoardType>
+void Engine<IndividualType, BoardType>::UpdateFitness() {
   // Create games
   QList<GameType*> games;
   QMap<int, GameType*> games_for_individual;
 
   for (int i = 0 ; i < FLAGS_pop ; ++i) {
-    Individual& individual = pop_[i];
+    IndividualType& individual = pop_[i];
     if (individual.HasFitness())
       continue;
 
