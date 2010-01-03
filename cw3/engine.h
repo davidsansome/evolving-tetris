@@ -11,6 +11,7 @@
 
 #include "population.h"
 #include "game.h"
+#include "individual.h"
 
 DEFINE_int32(pop, 128, "number of individuals in the population");
 DEFINE_int32(games, 1, "number of games for each individual to play");
@@ -19,12 +20,12 @@ DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
 DECLARE_double(mrate);
 DECLARE_double(mstddev);
 
-template <typename BoardType>
+template <Individual::Algorithm A, typename BoardType>
 class Engine {
  public:
   Engine();
 
-  typedef Game<BoardType> GameType;
+  typedef Game<A, BoardType> GameType;
 
   void Run();
 
@@ -54,19 +55,19 @@ class Engine {
   };
 };
 
-template <typename BoardType>
-Engine<BoardType>::Engine()
+template <Individual::Algorithm A, typename BoardType>
+Engine<A, BoardType>::Engine()
     : pop_(FLAGS_pop)
 {
 }
 
-template <typename BoardType>
-const Individual& Engine<BoardType>::FittestOf(const Individual& one, const Individual& two) {
+template <Individual::Algorithm A, typename BoardType>
+const Individual& Engine<A, BoardType>::FittestOf(const Individual& one, const Individual& two) {
   return (one.Fitness() > two.Fitness()) ? one : two;
 }
 
-template <typename BoardType>
-void Engine<BoardType>::Run() {
+template <Individual::Algorithm A, typename BoardType>
+void Engine<A, BoardType>::Run() {
   pop_.InitRandom();
 
   using std::cout;
@@ -81,6 +82,7 @@ void Engine<BoardType>::Run() {
   cout << "# Mutation rate " << FLAGS_mrate << endl;
   cout << "# Generations " << FLAGS_generations << endl;
   cout << "# Threads " << FLAGS_threads << endl;
+  cout << "# Board rating function " << Individual::NameOfAlgorithm<A>() << endl;
 
 #ifndef QT_NO_DEBUG
   cout << "# Running in debug mode with assertions enabled" << endl;
@@ -141,8 +143,8 @@ void Engine<BoardType>::Run() {
   }
 }
 
-template <typename BoardType>
-void Engine<BoardType>::UpdateFitness() {
+template <Individual::Algorithm A, typename BoardType>
+void Engine<A, BoardType>::UpdateFitness() {
   // Create games
   QList<GameType*> games;
   QMap<int, GameType*> games_for_individual;

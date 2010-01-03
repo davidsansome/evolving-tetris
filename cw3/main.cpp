@@ -7,6 +7,7 @@
 
 #include "engine.h"
 
+DEFINE_string(algo, "l", "board rating function - l, e or ed");
 DEFINE_string(size, "6x12", "board size");
 
 #ifndef QT_NO_DEBUG
@@ -24,10 +25,22 @@ DEFINE_string(size, "6x12", "board size");
   }
 #endif
 
+template <Individual::Algorithm A, int W, int H>
+void Run2() {
+  Engine<A, TetrisBoard<W, H> > e;
+  e.Run();
+}
+
 template <int W, int H>
 void Run() {
-  Engine<TetrisBoard<W, H> > e;
-  e.Run();
+  if (FLAGS_algo == "l")
+    Run2<Individual::Linear, W, H>();
+  else if (FLAGS_algo == "e")
+    Run2<Individual::Exponential, W, H>();
+  else if (FLAGS_algo == "ed")
+    Run2<Individual::ExponentialWithDisplacement, W, H>();
+  else
+    qFatal("Unknown algorithm %s", FLAGS_algo.c_str());
 }
 
 int main(int argc, char** argv) {

@@ -126,6 +126,21 @@ double Individual::Rating<Individual::ExponentialWithDisplacement>(const BoardSt
   return ret;
 }
 
+template <>
+const char* Individual::NameOfAlgorithm<Individual::Linear>() {
+  return "Linear";
+}
+
+template <>
+const char* Individual::NameOfAlgorithm<Individual::Exponential>() {
+  return "Exponential";
+}
+
+template <>
+const char* Individual::NameOfAlgorithm<Individual::ExponentialWithDisplacement>() {
+  return "Exponential with displacement";
+}
+
 QDebug operator<<(QDebug s, const Individual& i) {
   return s.space() << (i.HasFitness() ? QString::number(i.Fitness()).toAscii().constData() : "??")
                    << "-" << i.Weights();

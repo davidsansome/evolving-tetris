@@ -13,7 +13,7 @@
 
 class Individual;
 
-template <typename BoardType>
+template <Individual::Algorithm A, typename BoardType>
 class Game {
  public:
   Game(Individual& individual);
@@ -42,16 +42,16 @@ class Game {
 
 #include "individual.h"
 
-template <typename BoardType>
-Game<BoardType>::Game(Individual& individual)
+template <Individual::Algorithm A, typename BoardType>
+Game<A, BoardType>::Game(Individual& individual)
     : individual_(individual),
       blocks_placed_(0)
 {
   board_.Clear();
 }
 
-template <typename BoardType>
-void Game<BoardType>::Play() {
+template <Individual::Algorithm A, typename BoardType>
+void Game<A, BoardType>::Play() {
   // TODO: Seed engine
   random_engine_.seed();
 
@@ -64,8 +64,8 @@ void Game<BoardType>::Play() {
   }
 }
 
-template <typename BoardType>
-bool Game<BoardType>::Step() {
+template <Individual::Algorithm A, typename BoardType>
+bool Game<A, BoardType>::Step() {
   // Pick the next two tetraminos
   Tetramino tetramino1;
   Tetramino tetramino2;
@@ -90,7 +90,7 @@ bool Game<BoardType>::Step() {
       board1.CopyFrom(board_);
 
       // Add this first tetramino to the new board
-      double score1 = individual_.Rating(board1, tetramino1, x1, o1);
+      double score1 = individual_.Rating<A>(board1, tetramino1, x1, o1);
       if (isnan(score1))
         continue;
 
@@ -101,7 +101,7 @@ bool Game<BoardType>::Step() {
           board2.CopyFrom(board1);
 
           // Add the second tetramino to the board
-          double score2 = individual_.Rating(board2, tetramino2, x2, o2);
+          double score2 = individual_.Rating<A>(board2, tetramino2, x2, o2);
           if (isnan(score2))
             continue;
 

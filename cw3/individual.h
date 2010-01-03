@@ -45,6 +45,9 @@ class Individual {
   typedef std::tr1::array<int, Criteria_Count> IntegerGenes;
   typedef std::tr1::array<double, Criteria_Count> RealGenes;
 
+  template <Algorithm A>
+  static const char* NameOfAlgorithm();
+
   // Creating a new individual
   void InitRandom();
   void MutateFrom(const Individual& parent);
@@ -59,7 +62,7 @@ class Individual {
 
   // Adds the given tetramino to this board and computes a score based on
   // this individual's weightings
-  template <Algorithm A = Linear, int W, int H>
+  template <Algorithm A, int W, int H>
   double Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
                 int x, int orientation) const;
 
