@@ -231,12 +231,12 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
       const bool cell = Cell(x, y);
 
       if (cell != cell_above)
-        column_transitions ++;
+        ++ column_transitions;
       if (!cell && y==H-1)
-        column_transitions ++;
+        ++ column_transitions;
 
       if (cell) {
-        total_blocks ++;
+        ++ total_blocks;
         weighted_total_blocks += H - y;
       } else {
         // We're in a hole
@@ -260,12 +260,12 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
       const bool cell = Cell(x, y);
 
       if (cell != last_cell)
-        row_transitions ++;
+        ++ row_transitions;
 
       last_cell = cell;
     }
     if (!last_cell)
-      row_transitions ++;
+      ++ row_transitions;
   }
 
   stats->holes = holes;
