@@ -263,6 +263,7 @@ void Board::TotalBlocks() {
 void Board::Transitions() {
   board_->Analyse(&stats_);
   QCOMPARE(stats_.column_transitions, 4);
+  QCOMPARE(stats_.row_transitions, 8);
 
   // ____
   // ____
@@ -272,6 +273,7 @@ void Board::Transitions() {
   board_->Cell(3, 3) = true;
   board_->Analyse(&stats_);
   QCOMPARE(stats_.column_transitions, 4);
+  QCOMPARE(stats_.row_transitions, 8);
 
   // ____
   // ____
@@ -280,6 +282,7 @@ void Board::Transitions() {
   board_->Cell(1, 2) = true;
   board_->Analyse(&stats_);
   QCOMPARE(stats_.column_transitions, 6);
+  QCOMPARE(stats_.row_transitions, 10);
 
   // X___
   // X___
@@ -289,6 +292,7 @@ void Board::Transitions() {
   board_->Cell(0, 1) = true;
   board_->Analyse(&stats_);
   QCOMPARE(stats_.column_transitions, 8);
+  QCOMPARE(stats_.row_transitions, 10);
 
   // XX__
   // X___
@@ -297,6 +301,17 @@ void Board::Transitions() {
   board_->Cell(1, 0) = true;
   board_->Analyse(&stats_);
   QCOMPARE(stats_.column_transitions, 10);
+  QCOMPARE(stats_.row_transitions, 10);
+
+  // XXXX
+  // X___
+  // _X__
+  // X__X
+  board_->Cell(2, 0) = true;
+  board_->Cell(3, 0) = true;
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.column_transitions, 14);
+  QCOMPARE(stats_.row_transitions, 8);
 }
 
 void Board::TetraminoHeight() {

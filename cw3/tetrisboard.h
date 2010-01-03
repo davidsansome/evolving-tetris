@@ -189,6 +189,7 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   int max_well_depth = 0;
   int sum_well_depth = 0;
   int column_transitions = W;
+  int row_transitions = 0;
 
   // These we initialise by iterating through highest_cell_;
   int total_blocks = 0;
@@ -251,6 +252,22 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
     }
   }
 
+  // For each row...
+  // This loop calculates only row_transitions, and it's not optimised :/
+  for (int y=0 ; y<H ; ++y) {
+    bool last_cell = true;
+    for (int x=0 ; x<W ; ++x) {
+      const bool cell = Cell(x, y);
+
+      if (cell != last_cell)
+        row_transitions ++;
+
+      last_cell = cell;
+    }
+    if (!last_cell)
+      row_transitions ++;
+  }
+
   stats->holes = holes;
   stats->connected_holes = connected_holes;
   stats->max_well_depth = max_well_depth;
@@ -260,6 +277,7 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   stats->total_blocks = total_blocks;
   stats->weighted_blocks = weighted_total_blocks;
   stats->column_transitions = column_transitions;
+  stats->row_transitions = row_transitions;
 }
 
 template <int W, int H>
