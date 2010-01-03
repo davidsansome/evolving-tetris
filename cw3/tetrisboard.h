@@ -188,12 +188,13 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   int connected_holes = 0;
   int max_well_depth = 0;
   int sum_well_depth = 0;
+  int column_transitions = W;
 
   // These we initialise by iterating through highest_cell_;
+  int total_blocks = 0;
   int weighted_total_blocks = 0;
   int pile_height = H;
   int max_pile_height = 0;
-  int total_blocks = 0;
 
   for (auto it = highest_cell_.begin() ; it != highest_cell_.end() ; ++it) {
     if (*it != H) total_blocks ++;
@@ -206,16 +207,17 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
 
   // For each column...
   for (int x=0 ; x<W ; ++x) {
+    const int highest = highest_cell_[x];
     int well_depth;
 
     // A well is a narrow 1-cell wide hole that is open from the top.
     // Special cases for the edges of the board.
     if (x == 0) {
-      well_depth = highest_cell_[x] - highest_cell_[1];
+      well_depth = highest - highest_cell_[1];
     } else if (x == W-1) {
-      well_depth = highest_cell_[x] - highest_cell_[x-1];
+      well_depth = highest - highest_cell_[x-1];
     } else {
-      well_depth = highest_cell_[x] - qMax(highest_cell_[x-1], highest_cell_[x+1]);
+      well_depth = highest - qMax(highest_cell_[x-1], highest_cell_[x+1]);
     }
 
     sum_well_depth += qMax(0, well_depth);
@@ -226,6 +228,11 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
     bool cell_above = true;
     for (int y=highest_cell_[x]+1 ; y<H ; ++y) {
       const bool cell = Cell(x, y);
+
+      if (cell != cell_above)
+        column_transitions ++;
+      if (!cell && y==H-1)
+        column_transitions ++;
 
       if (cell) {
         total_blocks ++;
@@ -252,6 +259,7 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   stats->altitude_difference = pile_height - max_pile_height;
   stats->total_blocks = total_blocks;
   stats->weighted_blocks = weighted_total_blocks;
+  stats->column_transitions = column_transitions;
 }
 
 template <int W, int H>

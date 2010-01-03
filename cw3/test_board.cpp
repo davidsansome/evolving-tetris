@@ -260,6 +260,45 @@ void Board::TotalBlocks() {
   QCOMPARE(stats_.weighted_blocks, 7);
 }
 
+void Board::Transitions() {
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.column_transitions, 4);
+
+  // ____
+  // ____
+  // ____
+  // X__X
+  board_->Cell(0, 3) = true;
+  board_->Cell(3, 3) = true;
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.column_transitions, 4);
+
+  // ____
+  // ____
+  // _X__
+  // X__X
+  board_->Cell(1, 2) = true;
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.column_transitions, 6);
+
+  // X___
+  // X___
+  // _X__
+  // X__X
+  board_->Cell(0, 0) = true;
+  board_->Cell(0, 1) = true;
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.column_transitions, 8);
+
+  // XX__
+  // X___
+  // _X__
+  // X__X
+  board_->Cell(1, 0) = true;
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.column_transitions, 10);
+}
+
 void Board::TetraminoHeight() {
   // Type 5 is:
   //  XXX

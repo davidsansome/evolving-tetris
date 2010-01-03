@@ -29,6 +29,7 @@ class Board : public QObject {
   void WellDepth();
   void SumOfWells();
   void TotalBlocks();
+  void Transitions();
 
   void TetraminoHeight();
 
