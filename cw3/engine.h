@@ -95,10 +95,10 @@ void Engine<IndividualType, BoardType>::Run() {
 #endif
 
   cout << endl;
-  cout << "Generation\t"
-          "Highest fitness\t"
-          "Mean fitness\t"
-          "Lowest fitness\t";
+  cout << "Gen\t"
+          "Max\t"
+          "Mean\t"
+          "Min\t";
 
   for (int i=0 ; i<Criteria_Count ; ++i)
     cout << "w" << i << "\t";
@@ -111,7 +111,9 @@ void Engine<IndividualType, BoardType>::Run() {
     for (int i=0 ; i<Criteria_Count ; ++i)
       cout << "d" << i << "\t";
 
-  cout << "Time taken" << endl;
+  cout << "Time" << endl;
+
+  cout.precision(3);
 
   for (int generation_count=0 ; generation_count<FLAGS_generations ; ++generation_count) {
     // Play games to get the fitness of new individuals
