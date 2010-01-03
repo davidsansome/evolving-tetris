@@ -138,22 +138,16 @@ double Individual::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
   // Count the rows that were removed by adding this tetramino
   int removed_lines = board.ClearRows();
 
-  int pile_height;
-  int holes;
-  int connected_holes;
-  int altitude_difference;
-  int max_well_depth;
-
-  board.Analyse(&pile_height, &holes, &connected_holes,
-                &altitude_difference, &max_well_depth);
+  BoardStats stats;
+  board.Analyse(&stats);
 
   return
-      weights_[PileHeight] * pile_height +
-      weights_[Holes] * holes +
-      weights_[ConnectedHoles] * connected_holes +
+      weights_[PileHeight] * stats.pile_height +
+      weights_[Holes] * stats.holes +
+      weights_[ConnectedHoles] * stats.connected_holes +
       weights_[RemovedLines] * removed_lines +
-      weights_[AltitudeDifference] * altitude_difference +
-      weights_[MaxWellDepth] * max_well_depth;
+      weights_[AltitudeDifference] * stats.altitude_difference +
+      weights_[MaxWellDepth] * stats.max_well_depth;
 }
 
 #endif // INDIVIDUAL_H

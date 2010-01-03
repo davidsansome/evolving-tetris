@@ -101,22 +101,20 @@ void Board::PileHeight() {
   board_->Cell(3,2) = true;
   board_->Cell(3,3) = true;
 
-  int pile_height, b, c, d, e;
-
-  board_->Analyse(&pile_height, &b, &c, &d, &e);
-  QCOMPARE(pile_height, 3);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.pile_height, 3);
 
   // Knock off the top one
   board_->Cell(1,1) = false;
 
-  board_->Analyse(&pile_height, &b, &c, &d, &e);
-  QCOMPARE(pile_height, 2);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.pile_height, 2);
 
   // Knock off another
   board_->Cell(1,2) = false;
 
-  board_->Analyse(&pile_height, &b, &c, &d, &e);
-  QCOMPARE(pile_height, 2);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.pile_height, 2);
 }
 
 void Board::Holes() {
@@ -127,11 +125,9 @@ void Board::Holes() {
   board_->Cell(1,0) = true;
   board_->Cell(2,3) = true;
 
-  int a, holes, connected_holes, d, e;
-
-  board_->Analyse(&a, &holes, &connected_holes, &d, &e);
-  QCOMPARE(holes, 3);
-  QCOMPARE(connected_holes, 1);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.holes, 3);
+  QCOMPARE(stats_.connected_holes, 1);
 
   // _X__
   // __X_
@@ -139,9 +135,9 @@ void Board::Holes() {
   // __X_
   board_->Cell(2,1) = true;
 
-  board_->Analyse(&a, &holes, &connected_holes, &d, &e);
-  QCOMPARE(holes, 4);
-  QCOMPARE(connected_holes, 2);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.holes, 4);
+  QCOMPARE(stats_.connected_holes, 2);
 }
 
 void Board::AltitudeDifference() {
@@ -154,10 +150,8 @@ void Board::AltitudeDifference() {
   board_->Cell(2,3) = true;
   board_->Cell(3,3) = true;
 
-  int a, b, c, altitude_diff, e;
-
-  board_->Analyse(&a, &b, &c, &altitude_diff, &e);
-  QCOMPARE(altitude_diff, 2);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.altitude_difference, 2);
 
   // _X__
   // _X__
@@ -165,8 +159,8 @@ void Board::AltitudeDifference() {
   // X_XX
   board_->Cell(1,0) = true;
 
-  board_->Analyse(&a, &b, &c, &altitude_diff, &e);
-  QCOMPARE(altitude_diff, 3);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.altitude_difference, 3);
 
   // _X__
   // _X__
@@ -176,8 +170,8 @@ void Board::AltitudeDifference() {
   board_->Cell(2,3) = false;
   board_->Cell(3,3) = false;
 
-  board_->Analyse(&a, &b, &c, &altitude_diff, &e);
-  QCOMPARE(altitude_diff, 4);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.altitude_difference, 4);
 }
 
 void Board::WellDepth() {
@@ -189,10 +183,9 @@ void Board::WellDepth() {
   board_->Cell(2,0) = true;
   board_->Cell(3,0) = true;
 
-  int a, b, c, d, well_depth;
-
-  board_->Analyse(&a, &b, &c, &d, &well_depth);
-  QCOMPARE(well_depth, 4);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.max_well_depth, 4);
+  QCOMPARE(stats_.sum_well_depth, 4);
 
   // ____
   // X__X
@@ -208,8 +201,9 @@ void Board::WellDepth() {
   board_->Cell(2,3) = true;
   board_->Cell(3,3) = true;
 
-  board_->Analyse(&a, &b, &c, &d, &well_depth);
-  QCOMPARE(well_depth, 2);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.max_well_depth, 2);
+  QCOMPARE(stats_.sum_well_depth, 2);
 
   // ____
   // X_XX
@@ -217,8 +211,25 @@ void Board::WellDepth() {
   // X_XX
   board_->Cell(2,1) = true;
 
-  board_->Analyse(&a, &b, &c, &d, &well_depth);
-  QCOMPARE(well_depth, 3);
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.max_well_depth, 3);
+  QCOMPARE(stats_.sum_well_depth, 3);
+}
+
+void Board::SumOfWells() {
+  // ____
+  // _X__
+  // _X_X
+  // _X_X
+  board_->Cell(1,1) = true;
+  board_->Cell(1,2) = true;
+  board_->Cell(1,3) = true;
+  board_->Cell(3,2) = true;
+  board_->Cell(3,3) = true;
+
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.max_well_depth, 3);
+  QCOMPARE(stats_.sum_well_depth, 5);
 }
 
 void Board::TetraminoHeight() {

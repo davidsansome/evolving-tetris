@@ -9,6 +9,19 @@
 #include <algorithm>
 #include <tr1/array>
 
+struct BoardStats {
+  int pile_height;
+  int holes;
+  int connected_holes;
+  int altitude_difference;
+  int max_well_depth;
+  int sum_well_depth;
+  int total_blocks;
+  int weighted_blocks;
+  int row_transitions;
+  int column_transitions;
+};
+
 template <int W = 10, int H = 20>
 class TetrisBoard {
  public:
@@ -26,8 +39,7 @@ class TetrisBoard {
 
   int TetraminoHeight(const Tetramino& tetramino, int x, int orientation) const;
 
-  void Analyse(int* pile_height, int* holes, int* connected_holes,
-               int* altitude_difference, int* max_well_depth) const;
+  void Analyse(BoardStats* stats) const;
 
   inline const bool& Cell(int x, int y) const;
   inline const bool& operator()(int x, int y) const { return Cell(x, y); }
@@ -168,15 +180,15 @@ int TetrisBoard<W,H>::ClearRows() {
 }
 
 template <int W, int H>
-void TetrisBoard<W,H>::Analyse(int* pile_height, int* holes, int* connected_holes,
-                               int* altitude_difference, int* max_well_depth) const {
+void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
   // Initialise the output variables
-  *pile_height = H - *std::min_element(highest_cell_.begin(), highest_cell_.end());
-  int my_holes = 0;
-  int my_connected_holes = 0;
-  int my_max_well_depth = 0;
+  stats->pile_height = H - *std::min_element(highest_cell_.begin(), highest_cell_.end());
+  int holes = 0;
+  int connected_holes = 0;
+  int max_well_depth = 0;
+  int sum_well_depth = 0;
 
   int max_pile_height = H - *std::max_element(highest_cell_.begin(), highest_cell_.end());
 
@@ -194,7 +206,8 @@ void TetrisBoard<W,H>::Analyse(int* pile_height, int* holes, int* connected_hole
       well_depth = highest_cell_[x] - qMax(highest_cell_[x-1], highest_cell_[x+1]);
     }
 
-    my_max_well_depth = qMax(my_max_well_depth, well_depth);
+    sum_well_depth += qMax(0, well_depth);
+    max_well_depth = qMax(max_well_depth, well_depth);
 
     // Start at the highest filled cell and go down.  Keep track of the cell
     // above us.
@@ -203,22 +216,23 @@ void TetrisBoard<W,H>::Analyse(int* pile_height, int* holes, int* connected_hole
       const bool cell = Cell(x, y);
       if (!cell) {
         // We're in a hole
-        ++ my_holes;
+        ++ holes;
 
         // If the one above wasn't a hole as well then this is a new unique
         // connected hole
         if (cell_above) {
-          ++ my_connected_holes;
+          ++ connected_holes;
         }
       }
       cell_above = cell;
     }
   }
 
-  *holes = my_holes;
-  *connected_holes = my_connected_holes;
-  *max_well_depth = my_max_well_depth;
-  *altitude_difference = *pile_height - max_pile_height;
+  stats->holes = holes;
+  stats->connected_holes = connected_holes;
+  stats->max_well_depth = max_well_depth;
+  stats->sum_well_depth = sum_well_depth;
+  stats->altitude_difference = stats->pile_height - max_pile_height;
 }
 
 template <int W, int H>

@@ -27,11 +27,13 @@ class Board : public QObject {
   void Holes();
   void AltitudeDifference();
   void WellDepth();
+  void SumOfWells();
 
   void TetraminoHeight();
 
  private:
   BoardType* board_;
+  BoardStats stats_;
 };
 
 } // namespace Test
