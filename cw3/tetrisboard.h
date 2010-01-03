@@ -184,13 +184,25 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
   // Initialise the output variables
-  stats->pile_height = H - *std::min_element(highest_cell_.begin(), highest_cell_.end());
   int holes = 0;
   int connected_holes = 0;
   int max_well_depth = 0;
   int sum_well_depth = 0;
 
-  int max_pile_height = H - *std::max_element(highest_cell_.begin(), highest_cell_.end());
+  // These we initialise by iterating through highest_cell_;
+  int weighted_total_blocks = 0;
+  int pile_height = H;
+  int max_pile_height = 0;
+  int total_blocks = 0;
+
+  for (auto it = highest_cell_.begin() ; it != highest_cell_.end() ; ++it) {
+    if (*it != H) total_blocks ++;
+    weighted_total_blocks += H - *it;
+    pile_height = qMin(*it, pile_height);
+    max_pile_height = qMax(*it, max_pile_height);
+  }
+  pile_height = H - pile_height;
+  max_pile_height = H - max_pile_height;
 
   // For each column...
   for (int x=0 ; x<W ; ++x) {
@@ -209,12 +221,16 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
     sum_well_depth += qMax(0, well_depth);
     max_well_depth = qMax(max_well_depth, well_depth);
 
-    // Start at the highest filled cell and go down.  Keep track of the cell
-    // above us.
+    // Start at the cell below the highest filled cell and go down.
+    // Keep track of the cell above us.
     bool cell_above = true;
     for (int y=highest_cell_[x]+1 ; y<H ; ++y) {
       const bool cell = Cell(x, y);
-      if (!cell) {
+
+      if (cell) {
+        total_blocks ++;
+        weighted_total_blocks += H - y;
+      } else {
         // We're in a hole
         ++ holes;
 
@@ -232,7 +248,10 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   stats->connected_holes = connected_holes;
   stats->max_well_depth = max_well_depth;
   stats->sum_well_depth = sum_well_depth;
-  stats->altitude_difference = stats->pile_height - max_pile_height;
+  stats->pile_height = pile_height;
+  stats->altitude_difference = pile_height - max_pile_height;
+  stats->total_blocks = total_blocks;
+  stats->weighted_blocks = weighted_total_blocks;
 }
 
 template <int W, int H>

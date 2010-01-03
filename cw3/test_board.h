@@ -28,6 +28,7 @@ class Board : public QObject {
   void AltitudeDifference();
   void WellDepth();
   void SumOfWells();
+  void TotalBlocks();
 
   void TetraminoHeight();
 

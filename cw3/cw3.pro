@@ -13,8 +13,8 @@ HEADERS += individual.h \
     game.h \
     engine.h \
     population.h
-
 RESOURCES += data.qrc
+
 CONFIG(debug, debug|release) { 
     # Testing
     QT += testlib
@@ -29,3 +29,5 @@ CONFIG(debug, debug|release) {
 # CONFIG(release):QMAKE_CXXFLAGS += -g
 # google-gflags
 LIBS += -lgflags
+
+QMAKE_CXXFLAGS += --std=c++0x

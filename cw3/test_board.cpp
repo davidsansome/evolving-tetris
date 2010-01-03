@@ -232,6 +232,34 @@ void Board::SumOfWells() {
   QCOMPARE(stats_.sum_well_depth, 5);
 }
 
+void Board::TotalBlocks() {
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.total_blocks, 0);
+  QCOMPARE(stats_.weighted_blocks, 0);
+
+  // ____
+  // _X__
+  // ___X
+  // ___X
+  board_->Cell(1,1) = true;
+  board_->Cell(3,2) = true;
+  board_->Cell(3,3) = true;
+
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.total_blocks, 3);
+  QCOMPARE(stats_.weighted_blocks, 6);
+
+  // ____
+  // _X__
+  // ___X
+  // X__X
+  board_->Cell(0, 3) = true;
+
+  board_->Analyse(&stats_);
+  QCOMPARE(stats_.total_blocks, 4);
+  QCOMPARE(stats_.weighted_blocks, 7);
+}
+
 void Board::TetraminoHeight() {
   // Type 5 is:
   //  XXX

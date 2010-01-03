@@ -30,6 +30,12 @@ class Individual {
     RemovedLines,
     AltitudeDifference,
     MaxWellDepth,
+    SumWellDepth,
+    LandingHeight,
+    Blocks,
+    WeightedBlocks,
+    RowTransitions,
+    ColumnTransitions,
 
     Criteria_Count
   };
@@ -132,6 +138,8 @@ double Individual::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
     return std::numeric_limits<double>::quiet_NaN();
   }
 
+  int landing_height = y + tetramino.Size(orientation).height();
+
   // Add the tetramino to the board
   board.Add(tetramino, x, y, orientation);
 
@@ -147,7 +155,13 @@ double Individual::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
       weights_[ConnectedHoles] * stats.connected_holes +
       weights_[RemovedLines] * removed_lines +
       weights_[AltitudeDifference] * stats.altitude_difference +
-      weights_[MaxWellDepth] * stats.max_well_depth;
+      weights_[MaxWellDepth] * stats.max_well_depth +
+      weights_[SumWellDepth] * stats.sum_well_depth +
+      weights_[LandingHeight] * landing_height +
+      weights_[Blocks] * stats.total_blocks +
+      weights_[WeightedBlocks] * stats.weighted_blocks +
+      weights_[RowTransitions] * stats.row_transitions +
+      weights_[ColumnTransitions] * stats.column_transitions;
 }
 
 #endif // INDIVIDUAL_H
