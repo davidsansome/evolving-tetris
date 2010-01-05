@@ -17,7 +17,7 @@ class Game {
 
   PlayerType& GetPlayer() const { return player_; }
   SelectorType& GetBlockSelector() const { return block_selector_; }
-  BoardType& GetBoard() const { return board_; }
+  const BoardType& GetBoard() const { return board_; }
 
   // Plays a game of tetris, finishing when there's no room for any more blocks
   void Play();
