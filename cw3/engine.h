@@ -14,7 +14,8 @@
 #include "game.h"
 #include "individual.h"
 
-DEFINE_int32(pop, 128, "number of individuals in the population");
+DEFINE_int32(ppop, 128, "number of individuals in the player population");
+DEFINE_int32(spop, 128, "number of individuals in the block selector population");
 DEFINE_int32(games, 1, "number of games for each individual to play");
 DEFINE_int32(generations, 30, "number of generations to run for");
 DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
@@ -23,20 +24,21 @@ DECLARE_double(mstddev);
 DECLARE_double(emstddev);
 DECLARE_double(dmstddev);
 
-template <typename IndividualType, typename BoardType>
+template <typename PlayerType, typename SelectorType, typename BoardType>
 class Engine {
  public:
   Engine();
 
-  typedef Game<IndividualType, BoardType> GameType;
+  typedef Game<PlayerType, SelectorType, BoardType> GameType;
 
   void Run();
 
  private:
   void UpdateFitness();
-  static const IndividualType& FittestOf(const IndividualType& one, const IndividualType& two);
+  static const PlayerType& FittestOf(const PlayerType& one, const PlayerType& two);
 
-  Population<IndividualType> pop_;
+  Population<PlayerType> player_pop_;
+  Population<SelectorType> selector_pop_;
 
   // Functor for using QtConcurrentMap with object pointers
   template <typename T, typename C>
@@ -58,38 +60,42 @@ class Engine {
   };
 };
 
-template <typename IndividualType, typename BoardType>
-Engine<IndividualType, BoardType>::Engine()
-    : pop_(FLAGS_pop)
+template <typename PlayerType, typename SelectorType, typename BoardType>
+Engine<PlayerType, SelectorType, BoardType>::Engine()
+    : player_pop_(FLAGS_ppop),
+      selector_pop_(FLAGS_spop)
 {
 }
 
-template <typename IndividualType, typename BoardType>
-const IndividualType& Engine<IndividualType, BoardType>::FittestOf(const IndividualType& one, const IndividualType& two) {
+template <typename PlayerType, typename SelectorType, typename BoardType>
+const PlayerType& Engine<PlayerType, SelectorType, BoardType>::FittestOf(
+    const PlayerType& one, const PlayerType& two) {
   return (one.Fitness() > two.Fitness()) ? one : two;
 }
 
-template <typename IndividualType, typename BoardType>
-void Engine<IndividualType, BoardType>::Run() {
-  pop_.InitRandom();
+template <typename PlayerType, typename SelectorType, typename BoardType>
+void Engine<PlayerType, SelectorType, BoardType>::Run() {
+  player_pop_.InitRandom();
+  selector_pop_.InitRandom();
 
   using std::cout;
   using std::endl;
 
   QThreadPool::globalInstance()->setMaxThreadCount(FLAGS_threads);
 
-  cout << "# Population size " << FLAGS_pop << endl;
+  cout << "# Population size (players) " << FLAGS_ppop << endl;
+  cout << "# Population size (block selectors) " << FLAGS_spop << endl;
   cout << "# Games " << FLAGS_games << endl;
   cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
   cout << "# Mutation std dev (weights) " << FLAGS_mstddev << endl;
-  if (IndividualType::HasExponents())
+  if (PlayerType::HasExponents())
     cout << "# Mutation std dev (exponents) " << FLAGS_emstddev << endl;
-  if (IndividualType::HasDisplacements())
+  if (PlayerType::HasDisplacements())
     cout << "# Mutation std dev (displacements) " << FLAGS_dmstddev << endl;
   cout << "# Mutation rate " << FLAGS_mrate << endl;
   cout << "# Generations " << FLAGS_generations << endl;
   cout << "# Threads " << FLAGS_threads << endl;
-  cout << "# Board rating function " << IndividualType::NameOfAlgorithm() << endl;
+  cout << "# Board rating function " << PlayerType::NameOfAlgorithm() << endl;
 
 #ifndef QT_NO_DEBUG
   cout << "# Running in debug mode with assertions enabled" << endl;
@@ -104,19 +110,19 @@ void Engine<IndividualType, BoardType>::Run() {
   for (int i=0 ; i<Criteria_Count ; ++i)
     cout << "w" << i << "\t";
 
-  if (IndividualType::HasExponents())
+  if (PlayerType::HasExponents())
     for (int i=0 ; i<Criteria_Count ; ++i)
       cout << "e" << i << "\t";
 
-  if (IndividualType::HasDisplacements())
+  if (PlayerType::HasDisplacements())
     for (int i=0 ; i<Criteria_Count ; ++i)
       cout << "d" << i << "\t";
 
   cout << "Time\t"
        << "sd-w";
-  if (IndividualType::HasExponents())
+  if (PlayerType::HasExponents())
     cout << "\tsd-e";
-  if (IndividualType::HasDisplacements())
+  if (PlayerType::HasDisplacements())
     cout << "\tsd-d";
   cout << endl;
 
@@ -131,65 +137,65 @@ void Engine<IndividualType, BoardType>::Run() {
 
     // Show output
     cout << generation_count << "\t" <<
-            pop_.Fittest().Fitness() << "\t" <<
-            pop_.MeanFitness() << "\t" <<
-            pop_.LeastFit().Fitness() << "\t";
+            player_pop_.Fittest().Fitness() << "\t" <<
+            player_pop_.MeanFitness() << "\t" <<
+            player_pop_.LeastFit().Fitness() << "\t";
 
     for (int i=0 ; i<Criteria_Count ; ++i)
-      cout << pop_.Fittest().Weights()[i] << "\t";
+      cout << player_pop_.Fittest().Weights()[i] << "\t";
 
-    if (IndividualType::HasExponents())
+    if (PlayerType::HasExponents())
       for (int i=0 ; i<Criteria_Count ; ++i)
-        cout << pop_.Fittest().Exponents()[i] << "\t";
+        cout << player_pop_.Fittest().Exponents()[i] << "\t";
 
-    if (IndividualType::HasDisplacements())
+    if (PlayerType::HasDisplacements())
       for (int i=0 ; i<Criteria_Count ; ++i)
-        cout << pop_.Fittest().Displacements()[i] << "\t";
+        cout << player_pop_.Fittest().Displacements()[i] << "\t";
 
     cout << time_taken << "\t" <<
-        pop_.Diversity(boost::bind(&IndividualType::Weights, _1));
+        player_pop_.Diversity(boost::bind(&PlayerType::Weights, _1));
 
-    if (IndividualType::HasExponents())
-      cout << "\t" << pop_.Diversity(boost::bind(&IndividualType::Exponents, _1));
-    if (IndividualType::HasDisplacements())
-      cout << "\t" << pop_.Diversity(boost::bind(&IndividualType::Displacements, _1));
+    if (PlayerType::HasExponents())
+      cout << "\t" << player_pop_.Diversity(boost::bind(&PlayerType::Exponents, _1));
+    if (PlayerType::HasDisplacements())
+      cout << "\t" << player_pop_.Diversity(boost::bind(&PlayerType::Displacements, _1));
     cout << endl;
 
     // Make a new population
-    Population<IndividualType> pop2(FLAGS_pop);
+    Population<PlayerType> player_pop2(FLAGS_ppop);
 
-    for (int i=0 ; i<FLAGS_pop ; ++i) {
+    for (int i=0 ; i<FLAGS_ppop ; ++i) {
       // Pick two parents from the original population
-      const IndividualType& parent1 = pop_.SelectFitnessProportionate();
-      const IndividualType& parent2 = pop_.SelectFitnessProportionate(parent1);
+      const PlayerType& parent1 = player_pop_.SelectFitnessProportionate();
+      const PlayerType& parent2 = player_pop_.SelectFitnessProportionate(parent1);
 
       // Make a baby
-      IndividualType child;
+      PlayerType child;
       child.Crossover(parent1, parent2);
       child.Mutate();
 
       // Put the child into the new population
-      pop2.Replace(i, child);
+      player_pop2.Replace(i, child);
     }
 
     // Use the new population
-    pop_ = pop2;
+    player_pop_ = player_pop2;
   }
 }
 
-template <typename IndividualType, typename BoardType>
-void Engine<IndividualType, BoardType>::UpdateFitness() {
+template <typename PlayerType, typename SelectorType, typename BoardType>
+void Engine<PlayerType, SelectorType, BoardType>::UpdateFitness() {
   // Create games
   QList<GameType*> games;
   QMap<int, GameType*> games_for_individual;
 
-  for (int i = 0 ; i < FLAGS_pop ; ++i) {
-    IndividualType& individual = pop_[i];
+  for (int i = 0 ; i < FLAGS_ppop ; ++i) {
+    PlayerType& individual = player_pop_[i];
     if (individual.HasFitness())
       continue;
 
     for (int j = 0 ; j < FLAGS_games ; ++j) {
-      GameType* game = new GameType(individual);
+      GameType* game = new GameType(individual, selector_pop_[0]);
       games << game;
       games_for_individual.insertMulti(i, game);
     }
@@ -210,7 +216,7 @@ void Engine<IndividualType, BoardType>::UpdateFitness() {
       scores << game->BlocksPlaced();
     }
 
-    pop_[individual].SetFitness(scores);
+    player_pop_[individual].SetFitness(scores);
   }
 
   qDeleteAll(games);

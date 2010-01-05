@@ -9,18 +9,15 @@
 
 #include <limits>
 #include <math.h>
-#include <boost/random/mersenne_twister.hpp>
 
-template <typename IndividualType, typename BoardType>
+template <typename PlayerType, typename SelectorType, typename BoardType>
 class Game {
  public:
-  Game(IndividualType& individual);
+  Game(PlayerType& player, SelectorType& selector);
 
-  IndividualType& GetIndividual() const { return individual_; }
+  PlayerType& GetPlayer() const { return player_; }
+  SelectorType& GetBlockSelector() const { return block_selector_; }
   BoardType& GetBoard() const { return board_; }
-
-  void SetSeed(quint32 seed) { random_seed_ = seed; }
-  quint32 GetSeed() const { return random_seed_; }
 
   // Plays a game of tetris, finishing when there's no room for any more blocks
   void Play();
@@ -31,34 +28,31 @@ class Game {
  private:
   bool Step();
 
-  IndividualType& individual_;
+  PlayerType& player_;
+  SelectorType& block_selector_;
 
   BoardType board_;
   Tetramino next_tetramino_;
 
   quint64 blocks_placed_;
-
-  boost::mt19937 random_engine_;
-  quint64 random_seed_;
 };
 
 #include "individual.h"
 
-template <typename IndividualType, typename BoardType>
-Game<IndividualType, BoardType>::Game(IndividualType& individual)
-    : individual_(individual),
-      blocks_placed_(0),
-      random_seed_(42)
+template <typename PlayerType, typename SelectorType, typename BoardType>
+Game<PlayerType, SelectorType, BoardType>::Game(PlayerType& player,
+                                                SelectorType& block_selector)
+    : player_(player),
+      block_selector_(block_selector),
+      blocks_placed_(0)
 {
   board_.Clear();
 }
 
-template <typename IndividualType, typename BoardType>
-void Game<IndividualType, BoardType>::Play() {
-  random_engine_.seed(boost::mt19937::result_type(random_seed_));
-
+template <typename PlayerType, typename SelectorType, typename BoardType>
+void Game<PlayerType, SelectorType, BoardType>::Play() {
   board_.Clear();
-  next_tetramino_.InitRandom(random_engine_);
+  next_tetramino_.InitFrom(block_selector_());
 
   blocks_placed_ = 0;
   while (Step()) {
@@ -66,13 +60,13 @@ void Game<IndividualType, BoardType>::Play() {
   }
 }
 
-template <typename IndividualType, typename BoardType>
-bool Game<IndividualType, BoardType>::Step() {
+template <typename PlayerType, typename SelectorType, typename BoardType>
+bool Game<PlayerType, SelectorType, BoardType>::Step() {
   // Pick the next two tetraminos
   Tetramino tetramino1;
   Tetramino tetramino2;
   tetramino1.InitFrom(next_tetramino_);
-  tetramino2.InitRandom(random_engine_);
+  tetramino2.InitFrom(block_selector_());
 
   const int oc1 = tetramino1.OrientationCount();
   const int oc2 = tetramino2.OrientationCount();
@@ -92,7 +86,7 @@ bool Game<IndividualType, BoardType>::Step() {
       board1.CopyFrom(board_);
 
       // Add this first tetramino to the new board
-      double score1 = individual_.Rating(board1, tetramino1, x1, o1);
+      double score1 = player_.Rating(board1, tetramino1, x1, o1);
       if (isnan(score1))
         continue;
 
@@ -103,7 +97,7 @@ bool Game<IndividualType, BoardType>::Step() {
           board2.CopyFrom(board1);
 
           // Add the second tetramino to the board
-          double score2 = individual_.Rating(board2, tetramino2, x2, o2);
+          double score2 = player_.Rating(board2, tetramino2, x2, o2);
           if (isnan(score2))
             continue;
 

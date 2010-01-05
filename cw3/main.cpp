@@ -6,6 +6,7 @@
 #include <sys/time.h>
 
 #include "engine.h"
+#include "blockselector_random.h"
 
 DEFINE_string(algo, "l", "board rating function - l, e or ed");
 DEFINE_string(size, "6x12", "board size");
@@ -27,7 +28,7 @@ DEFINE_string(size, "6x12", "board size");
 
 template <typename IndividualType, int W, int H>
 void Run2() {
-  Engine<IndividualType, TetrisBoard<W, H> > e;
+  Engine<IndividualType, BlockSelector::Random, TetrisBoard<W, H> > e;
   e.Run();
 }
 

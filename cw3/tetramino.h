@@ -10,9 +10,6 @@ class Tetramino {
  public:
   Tetramino();
 
-  template <typename Engine>
-  void InitRandom(Engine& engine);
-
   void InitFrom(int type) { type_ = type; }
   void InitFrom(const Tetramino& other) { type_ = other.type_; }
 
@@ -24,6 +21,7 @@ class Tetramino {
   static const int kTypeCount;
   static const int kBlockSize;
   static const int kPointsCount;
+  static const boost::uniform_smallint<> kTypeRange;
 
  private:
   Tetramino(const Tetramino&) {}
@@ -40,15 +38,8 @@ class Tetramino {
   static QSize* size_;
   static int* orientation_count_;
 
-  static boost::uniform_smallint<> random_range_;
-
   static const int kMaxOrientationCount;
 };
-
-template <typename Engine>
-void Tetramino::InitRandom(Engine& engine) {
-  type_ = random_range_(engine);
-}
 
 QPoint* Tetramino::DataOffset(int type, int orientation, int i) const {
   Q_ASSERT(type >= 0 && type < kTypeCount);

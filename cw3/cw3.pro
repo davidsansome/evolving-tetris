@@ -5,14 +5,16 @@ TARGET = cw3
 TEMPLATE = app
 SOURCES += main.cpp \
     individual.cpp \
-    tetramino.cpp
+    tetramino.cpp \
+    blockselector_random.cpp
 HEADERS += individual.h \
     tetrisboard.h \
     tetramino.h \
     game.h \
     engine.h \
     population.h \
-    utilities.h
+    utilities.h \
+    blockselector_random.h
 RESOURCES += data.qrc
 
 CONFIG(debug, debug|release) { 
