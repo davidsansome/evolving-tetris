@@ -19,6 +19,9 @@ class Game {
   IndividualType& GetIndividual() const { return individual_; }
   BoardType& GetBoard() const { return board_; }
 
+  void SetSeed(quint32 seed) { random_seed_ = seed; }
+  quint32 GetSeed() const { return random_seed_; }
+
   // Plays a game of tetris, finishing when there's no room for any more blocks
   void Play();
 
@@ -36,6 +39,7 @@ class Game {
   quint64 blocks_placed_;
 
   boost::mt19937 random_engine_;
+  quint64 random_seed_;
 };
 
 #include "individual.h"
@@ -43,15 +47,15 @@ class Game {
 template <typename IndividualType, typename BoardType>
 Game<IndividualType, BoardType>::Game(IndividualType& individual)
     : individual_(individual),
-      blocks_placed_(0)
+      blocks_placed_(0),
+      random_seed_(42)
 {
   board_.Clear();
 }
 
 template <typename IndividualType, typename BoardType>
 void Game<IndividualType, BoardType>::Play() {
-  // TODO: Seed engine
-  random_engine_.seed();
+  random_engine_.seed(boost::mt19937::result_type(random_seed_));
 
   board_.Clear();
   next_tetramino_.InitRandom(random_engine_);

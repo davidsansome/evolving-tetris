@@ -23,9 +23,8 @@ class Population {
   IndividualType& LeastFit();
   quint64 MeanFitness() const;
 
-  double WeightDiversity() const;
-  double ExponentDiversity() const;
-  double DisplacementDiversity() const;
+  template <typename ChromosomeAccessor>
+  double Diversity(const ChromosomeAccessor& accessor) const;
 
   void Replace(int i, const IndividualType& replacement);
 
@@ -81,42 +80,22 @@ quint64 Population<IndividualType>::MeanFitness() const {
 }
 
 template <typename IndividualType>
-double Population<IndividualType>::WeightDiversity() const {
-  int diversity = 0;
-  for (int i=0 ; i<Criteria_Count ; ++i) {
-    QVector<int> genes;
-    foreach (const IndividualType& individual, individuals_) {
-      genes << individual.Weights()[i];
-    }
-    diversity += Utilities::StandardDeviation(genes);
-  }
-  return double(diversity) / Criteria_Count;
-}
+template <typename ChromosomeAccessor>
+double Population<IndividualType>::Diversity(
+    const ChromosomeAccessor& accessor) const {
+  typedef typename ChromosomeAccessor::result_type::value_type GeneType;
 
-template <typename IndividualType>
-double Population<IndividualType>::ExponentDiversity() const {
-  double diversity = 0;
-  for (int i=0 ; i<Criteria_Count ; ++i) {
-    QVector<double> genes;
-    foreach (const IndividualType& individual, individuals_) {
-      genes << individual.Exponents()[i];
-    }
-    diversity += Utilities::StandardDeviation(genes);
-  }
-  return double(diversity) / Criteria_Count;
-}
+  const int count = accessor(&individuals_[0]).size();
 
-template <typename IndividualType>
-double Population<IndividualType>::DisplacementDiversity() const {
-  double diversity = 0;
-  for (int i=0 ; i<Criteria_Count ; ++i) {
-    QVector<double> genes;
+  GeneType diversity = 0;
+  for (int i=0 ; i<count ; ++i) {
+    QVector<GeneType> genes;
     foreach (const IndividualType& individual, individuals_) {
-      genes << individual.Displacements()[i];
+      genes << accessor(&individual)[i];
     }
     diversity += Utilities::StandardDeviation(genes);
   }
-  return double(diversity) / Criteria_Count;
+  return double(diversity) / count;
 }
 
 template <typename IndividualType>

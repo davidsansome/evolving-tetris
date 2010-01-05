@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <gflags/gflags.h>
+#include <boost/bind.hpp>
 
 #include "population.h"
 #include "game.h"
@@ -146,12 +147,12 @@ void Engine<IndividualType, BoardType>::Run() {
         cout << pop_.Fittest().Displacements()[i] << "\t";
 
     cout << time_taken << "\t" <<
-            pop_.WeightDiversity();
+        pop_.Diversity(boost::bind(&IndividualType::Weights, _1));
 
     if (IndividualType::HasExponents())
-      cout << "\t" << pop_.ExponentDiversity();
+      cout << "\t" << pop_.Diversity(boost::bind(&IndividualType::Exponents, _1));
     if (IndividualType::HasDisplacements())
-      cout << "\t" << pop_.DisplacementDiversity();
+      cout << "\t" << pop_.Diversity(boost::bind(&IndividualType::Displacements, _1));
     cout << endl;
 
     // Make a new population
