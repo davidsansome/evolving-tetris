@@ -15,7 +15,6 @@ class Tetramino : public QObject {
 
  private slots:
   void TestFixedCtor();
-  void TestRandomCtor();
 
  private:
   ::Tetramino t_;

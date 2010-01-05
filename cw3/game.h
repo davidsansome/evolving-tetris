@@ -1,9 +1,6 @@
 #ifndef GAME_H
 #define GAME_H
 
-#include <QSize>
-#include <QThread>
-
 #include "tetrisboard.h"
 #include "tetramino.h"
 
@@ -23,7 +20,7 @@ class Game {
   void Play();
 
   // The number of blocks that we managed to place.  The more the better
-  quint64 BlocksPlaced() const { return blocks_placed_; }
+  uint64_t BlocksPlaced() const { return blocks_placed_; }
 
  private:
   bool Step();
@@ -34,7 +31,7 @@ class Game {
   BoardType board_;
   Tetramino next_tetramino_;
 
-  quint64 blocks_placed_;
+  uint64_t blocks_placed_;
 };
 
 #include "individual.h"

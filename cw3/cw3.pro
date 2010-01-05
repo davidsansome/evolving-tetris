@@ -15,15 +15,19 @@ HEADERS += individual.h \
     population.h \
     utilities.h \
     blockselector_random.h
-RESOURCES += data.qrc
+
+CONFIG(release) {
+  # For cassert
+  DEFINES += NDEBUG
+}
 
 CONFIG(debug, debug|release) { 
-    # Testing
-    QT += testlib
-    SOURCES += test_board.cpp test_tetramino.cpp
-    HEADERS += test_board.h test_tetramino.h
-    QMAKE_POST_LINK = ./cw3 \
-        t
+  # Testing
+  QT += testlib
+  SOURCES += test_board.cpp test_tetramino.cpp
+  HEADERS += test_board.h test_tetramino.h
+  QMAKE_POST_LINK = ./cw3 \
+      t
 }
 
 # google-perftools

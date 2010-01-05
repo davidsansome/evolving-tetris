@@ -1,8 +1,6 @@
 #ifndef BLOCKSELECTOR_RANDOM_H
 #define BLOCKSELECTOR_RANDOM_H
 
-#include <QtGlobal>
-
 #include <tr1/array>
 
 #include <boost/random/mersenne_twister.hpp>
@@ -13,7 +11,7 @@ namespace BlockSelector {
   public:
     Random();
 
-    typedef quint32 SeedType;
+    typedef uint32_t SeedType;
     typedef std::tr1::array<SeedType, 1> GeneType;
 
     void SetSeed(SeedType seed);

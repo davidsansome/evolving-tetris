@@ -1,6 +1,22 @@
 #ifndef UTILITIES_H
 #define UTILITIES_H
 
+// Source-compatibility with QPoint and QSize
+class Int2 {
+ public:
+  Int2() {}
+  Int2(int x, int y) : x_(x), y_(y) {}
+
+  int x() const { return x_; }
+  int y() const { return y_; }
+  int width() const { return x_; }
+  int height() const { return y_; }
+
+ private:
+  int x_;
+  int y_;
+};
+
 namespace Utilities {
   template <typename Container>
   typename Container::value_type Sum(typename Container::const_iterator begin,

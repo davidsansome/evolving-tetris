@@ -4,10 +4,10 @@
 #include "individual.h"
 #include "utilities.h"
 
-#include <QList>
-
 #include <algorithm>
+#include <vector>
 #include <cstdlib>
+#include <cassert>
 
 template <typename IndividualType>
 class Population {
@@ -21,7 +21,7 @@ class Population {
 
   IndividualType& Fittest();
   IndividualType& LeastFit();
-  quint64 MeanFitness() const;
+  uint64_t MeanFitness() const;
 
   template <typename ChromosomeAccessor>
   double Diversity(const ChromosomeAccessor& accessor) const;
@@ -29,12 +29,12 @@ class Population {
   void Replace(int i, const IndividualType& replacement);
 
  private:
-  QList<IndividualType> individuals_;
+  std::vector<IndividualType> individuals_;
 
   struct CompareFitness {
     bool operator()(const IndividualType& left, const IndividualType& right) const {
-      Q_ASSERT(left.HasFitness());
-      Q_ASSERT(right.HasFitness());
+      assert(left.HasFitness());
+      assert(right.HasFitness());
 
       return left.Fitness() < right.Fitness();
     }
@@ -46,13 +46,13 @@ Population<IndividualType>::Population(int size)
 {
   for (int i=0 ; i<size ; ++i) {
     IndividualType individual;
-    individuals_ << individual;
+    individuals_.push_back(individual);
   }
 }
 
 template <typename IndividualType>
 void Population<IndividualType>::InitRandom() {
-  for (int i=0 ; i<individuals_.count() ; ++i) {
+  for (uint i=0 ; i<individuals_.size() ; ++i) {
     IndividualType& individual = individuals_[i];
     individual.InitRandom();
   }
@@ -71,12 +71,13 @@ IndividualType& Population<IndividualType>::LeastFit() {
 }
 
 template <typename IndividualType>
-quint64 Population<IndividualType>::MeanFitness() const {
-  quint64 total_fitness = 0;
-  foreach (const IndividualType& i, individuals_) {
-    total_fitness += i.Fitness();
+uint64_t Population<IndividualType>::MeanFitness() const {
+  uint64_t total_fitness = 0;
+
+  for (auto it = individuals_.begin() ; it != individuals_.end() ; ++it) {
+    total_fitness += it->Fitness();
   }
-  return total_fitness / individuals_.count();
+  return total_fitness / individuals_.size();
 }
 
 template <typename IndividualType>
@@ -89,9 +90,9 @@ double Population<IndividualType>::Diversity(
 
   GeneType diversity = 0;
   for (int i=0 ; i<count ; ++i) {
-    QVector<GeneType> genes;
-    foreach (const IndividualType& individual, individuals_) {
-      genes << accessor(&individual)[i];
+    std::vector<GeneType> genes;
+    for (auto it = individuals_.begin() ; it != individuals_.end() ; ++it) {
+      genes.push_back(accessor(&(*it))[i]);
     }
     diversity += Utilities::StandardDeviation(genes);
   }
@@ -103,18 +104,18 @@ IndividualType& Population<IndividualType>::SelectFitnessProportionate(const Ind
   // This is really nasty
 
   // Get the sum of all individuals' fitness
-  quint64 total_fitness = 0;
-  foreach (const IndividualType& i, individuals_) {
-    Q_ASSERT(i.HasFitness());
+  uint64_t total_fitness = 0;
+  for (auto it = individuals_.begin() ; it != individuals_.end() ; ++it) {
+    assert(it->HasFitness());
 
-    if (i == excluding)
+    if (*it == excluding)
       continue;
 
-    total_fitness += i.Fitness();
+    total_fitness += it->Fitness();
   }
 
-  quint64 selection = double(qrand()) / RAND_MAX * total_fitness;
-  for (int i=0 ; i<individuals_.count() ; ++i) {
+  uint64_t selection = double(rand()) / RAND_MAX * total_fitness;
+  for (uint i=0 ; i<individuals_.size() ; ++i) {
     IndividualType& individual = individuals_[i];
     if (individual == excluding)
       continue;
@@ -125,8 +126,8 @@ IndividualType& Population<IndividualType>::SelectFitnessProportionate(const Ind
     selection -= individual.Fitness();
   }
 
-  qFatal("Fitness proportionate selection didn't find an individual :(");
-  return individuals_.first(); // To stop compiler warning
+  std::cerr << "Fitness proportionate selection didn't find an individual :(";
+  return *individuals_.begin(); // To stop compiler warning
 }
 
 template <typename IndividualType>

@@ -18,5 +18,5 @@ int BlockSelector::Random::operator ()() {
 }
 
 void BlockSelector::Random::InitRandom() {
-  SetSeed(qrand());
+  SetSeed(rand());
 }

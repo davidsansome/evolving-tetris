@@ -1,13 +1,12 @@
 #ifndef TETRISBOARD_H
 #define TETRISBOARD_H
 
-#include <QSize>
-#include <QtDebug>
-
 #include "tetramino.h"
+#include "utilities.h"
 
 #include <algorithm>
 #include <tr1/array>
+#include <cassert>
 
 // Fields need to be in the same order as Individual::Criteria
 struct BoardStats {
@@ -36,7 +35,7 @@ class TetrisBoard {
 
   static const int kWidth;
   static const int kHeight;
-  static QSize Size() { return QSize(W, H); }
+  static Int2 Size() { return Int2(W, H); }
 
   void Clear();
   void CopyFrom(const TetrisBoard& other);
@@ -67,7 +66,7 @@ class TetrisBoard {
   bool dirty_;
   void UpdateHighestCells();
 #else
-  void UpdateHighestCells() { qt_noop(); }
+  void UpdateHighestCells() { }
 #endif
 
   std::tr1::array<bool, W*H> cells_;
@@ -82,16 +81,16 @@ const int TetrisBoard<W,H>::kHeight = H;
 
 template <int W, int H>
 const bool& TetrisBoard<W,H>::Cell(int x, int y) const {
-  Q_ASSERT(x >= 0 && x < W);
-  Q_ASSERT(y >= 0 && y < H);
+  assert(x >= 0 && x < W);
+  assert(y >= 0 && y < H);
 
   return cells_[y*W + x];
 }
 
 template <int W, int H>
 inline void TetrisBoard<W,H>::SetCell(int x, int y, bool value) {
-  Q_ASSERT(x >= 0 && x < W);
-  Q_ASSERT(y >= 0 && y < H);
+  assert(x >= 0 && x < W);
+  assert(y >= 0 && y < H);
 
   cells_[y*W + x] = value;
 }
@@ -99,8 +98,8 @@ inline void TetrisBoard<W,H>::SetCell(int x, int y, bool value) {
 #ifndef QT_NO_DEBUG
 template <int W, int H>
 bool& TetrisBoard<W,H>::Cell(int x, int y) {
-  Q_ASSERT(x >= 0 && x < W);
-  Q_ASSERT(y >= 0 && y < H);
+  assert(x >= 0 && x < W);
+  assert(y >= 0 && y < H);
 
   dirty_ = true;
   return cells_[y*W + x];
@@ -129,16 +128,16 @@ void TetrisBoard<W,H>::CopyFrom(const TetrisBoard& other) {
 
 template <int W, int H>
 void TetrisBoard<W,H>::Add(const Tetramino& tetramino, int x, int y, int orientation) {
-  Q_ASSERT(x + tetramino.Size(orientation).width() <= W);
-  Q_ASSERT(y + tetramino.Size(orientation).height() <= H);
-  Q_ASSERT(x >= 0 && y >= 0);
+  assert(x + tetramino.Size(orientation).width() <= W);
+  assert(y + tetramino.Size(orientation).height() <= H);
+  assert(x >= 0 && y >= 0);
 
-  const QPoint* point = tetramino.Points(orientation);
+  const Int2* point = tetramino.Points(orientation);
   for (int i=0 ; i<Tetramino::kPointsCount ; ++i) {
     const int px = x + point->x();
     const int py = y + point->y();
 
-    Q_ASSERT(!Cell(px, py));
+    assert(!Cell(px, py));
 
     SetCell(px, py, true);
     highest_cell_[px] = qMin(highest_cell_[px], py);
@@ -228,8 +227,8 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
       well_depth = highest - qMax(highest_cell_[x-1], highest_cell_[x+1]);
     }
 
-    sum_well_depth += qMax(0, well_depth);
-    max_well_depth = qMax(max_well_depth, well_depth);
+    sum_well_depth += std::max(0, well_depth);
+    max_well_depth = std::max(max_well_depth, well_depth);
 
     // Start at the cell below the highest filled cell and go down.
     // Keep track of the cell above us.
@@ -292,7 +291,7 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
                                       int x, int orientation) const {
   const_cast<TetrisBoard*>(this)->UpdateHighestCells();
 
-  const QSize& size(tetramino.Size(orientation));
+  const Int2& size(tetramino.Size(orientation));
 
   // Work out where to start
   int y_start = *std::min_element(
@@ -304,7 +303,7 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
   // "Drop" the tetramino
   for (int y=y_start ; y<=H - size.height() ; ++y) {
     // Check to see if any of the points on the tetramino at this position are occupied
-    const QPoint* point = tetramino.Points(orientation);
+    const Int2* point = tetramino.Points(orientation);
     for (int i=0 ; i<Tetramino::kPointsCount ; ++i) {
       // If any point is occupied, return the previous y coord
       if (Cell(x + point->x(), y + point->y())) {
@@ -334,23 +333,23 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
 
     dirty_ = false;
   }
-#endif
 
-template <int W, int H>
-QDebug operator<<(QDebug s, const TetrisBoard<W,H>& b) {
-  s.nospace() << "TetrisBoard(" << b.kWidth << "x" << b.kHeight << ")\n";
+  template <int W, int H>
+  QDebug operator<<(QDebug s, const TetrisBoard<W,H>& b) {
+    s.nospace() << "TetrisBoard(" << b.kWidth << "x" << b.kHeight << ")\n";
 
-  for (int y=0 ; y<b.kHeight ; ++y) {
-    QString row;
-    row.sprintf("%2d  ", y);
+    for (int y=0 ; y<b.kHeight ; ++y) {
+      QString row;
+      row.sprintf("%2d  ", y);
 
-    for (int x=0 ; x<b.kWidth ; ++x) {
-      row += b(x, y) ? "X" : "_";
+      for (int x=0 ; x<b.kWidth ; ++x) {
+        row += b(x, y) ? "X" : "_";
+      }
+      s.nospace() << row.toAscii().constData() << "\n";
     }
-    s.nospace() << row.toAscii().constData() << "\n";
-  }
 
-  return s.space();
-}
+    return s.space();
+  }
+#endif
 
 #endif // TETRISBOARD_H

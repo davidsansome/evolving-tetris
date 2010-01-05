@@ -1,23 +1,20 @@
-#include <QApplication>
-#include <QtDebug>
-#include <QThreadPool>
+#include "engine.h"
+#include "blockselector_random.h"
 
 #include <google/gflags.h>
 #include <sys/time.h>
-
-#include "engine.h"
-#include "blockselector_random.h"
 
 DEFINE_string(algo, "l", "board rating function - l, e or ed");
 DEFINE_string(size, "6x12", "board size");
 
 #ifndef QT_NO_DEBUG
 # include <QTest>
+# include <QStringList>
 # include "test_board.h"
 # include "test_tetramino.h"
 
   template <typename T>
-  void RunTest(const QStringList& args) {
+  void RunTest(const QStringList& args = QStringList()) {
     T* test = new T;
     int ret = QTest::qExec(test, args);
     if (ret)
@@ -50,14 +47,10 @@ int main(int argc, char** argv) {
   google::SetUsageMessage(usage);
   google::ParseCommandLineFlags(&argc, &argv, true);
 
-  QApplication a(argc, argv);
-
 #ifndef QT_NO_DEBUG
-  QStringList args(a.arguments());
-  if (args.count() >= 2 && args[1] == "t") {
-    args.removeAt(1);
-    RunTest<Test::Board>(args);
-    RunTest<Test::Tetramino>(args);
+  if (argc >= 2 && argsv[1] == "t") {
+    RunTest<Test::Board>();
+    RunTest<Test::Tetramino>();
 
     return 0;
   }
@@ -66,7 +59,7 @@ int main(int argc, char** argv) {
   // Seed random number generator
   timeval tv;
   gettimeofday(&tv, NULL);
-  qsrand(tv.tv_usec * tv.tv_sec);
+  srand(tv.tv_usec * tv.tv_sec);
 
   if      (FLAGS_size == "5x10") Run<5,10>();
   else if (FLAGS_size == "6x12") Run<6,12>();
@@ -75,7 +68,8 @@ int main(int argc, char** argv) {
   else if (FLAGS_size == "9x18") Run<9,18>();
   else if (FLAGS_size == "10x20") Run<10,20>();
   else {
-    qFatal("Non-standard board size %s", FLAGS_size.c_str());
+    std::cerr << "Non-standard board size " << FLAGS_size;
+    return 1;
   }
 
   return 0;

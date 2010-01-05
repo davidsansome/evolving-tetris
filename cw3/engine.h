@@ -1,22 +1,19 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include <QSize>
-#include <QTime>
-#include <QtConcurrentMap>
-#include <QtDebug>
-
-#include <iostream>
-#include <gflags/gflags.h>
-#include <boost/bind.hpp>
-
 #include "population.h"
 #include "game.h"
 #include "individual.h"
 
+#include <QtConcurrentMap>
+
+#include <iostream>
+#include <gflags/gflags.h>
+#include <boost/bind.hpp>
+#include <sys/time.h>
+
 DEFINE_int32(ppop, 128, "number of individuals in the player population");
 DEFINE_int32(spop, 128, "number of individuals in the block selector population");
-DEFINE_int32(games, 1, "number of games for each individual to play");
 DEFINE_int32(generations, 30, "number of generations to run for");
 DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
 DECLARE_double(mrate);
@@ -85,7 +82,6 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
 
   cout << "# Population size (players) " << FLAGS_ppop << endl;
   cout << "# Population size (block selectors) " << FLAGS_spop << endl;
-  cout << "# Games " << FLAGS_games << endl;
   cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
   cout << "# Mutation std dev (weights) " << FLAGS_mstddev << endl;
   if (PlayerType::HasExponents())
@@ -129,11 +125,16 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
   cout.precision(3);
 
   for (int generation_count=0 ; generation_count<FLAGS_generations ; ++generation_count) {
+    timeval start_time, end_time;
+
     // Play games to get the fitness of new individuals
-    QTime t;
-    t.start();
+    gettimeofday(&start_time, NULL);
     UpdateFitness();
-    int time_taken = t.elapsed();
+    gettimeofday(&end_time, NULL);
+
+    uint64_t time_taken = (end_time.tv_sec - start_time.tv_sec) * 1000000 +
+                           end_time.tv_usec - start_time.tv_usec;
+    time_taken /= 1000; // msec
 
     // Show output
     cout << generation_count << "\t" <<
@@ -186,22 +187,18 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
 template <typename PlayerType, typename SelectorType, typename BoardType>
 void Engine<PlayerType, SelectorType, BoardType>::UpdateFitness() {
   // Create games
-  QList<GameType*> games;
-  QMap<int, GameType*> games_for_individual;
+  std::vector<GameType*> games;
 
   for (int i = 0 ; i < FLAGS_ppop ; ++i) {
     PlayerType& individual = player_pop_[i];
     if (individual.HasFitness())
       continue;
 
-    for (int j = 0 ; j < FLAGS_games ; ++j) {
-      GameType* game = new GameType(individual, selector_pop_[0]);
-      games << game;
-      games_for_individual.insertMulti(i, game);
-    }
+    GameType* game = new GameType(individual, selector_pop_[0]);
+    games.push_back(game);
   }
 
-  if (games.isEmpty())
+  if (games.size() == 0)
     return;
 
   // Run games
@@ -210,16 +207,10 @@ void Engine<PlayerType, SelectorType, BoardType>::UpdateFitness() {
   future.waitForFinished();
 
   // Update the fitness for each one
-  foreach (int individual, games_for_individual.uniqueKeys()) {
-    QList<quint64> scores;
-    foreach (const GameType* game, games_for_individual.values(individual)) {
-      scores << game->BlocksPlaced();
-    }
-
-    player_pop_[individual].SetFitness(scores);
+  for (auto it = games.begin() ; it != games.end() ; ++it) {
+    (*it)->GetPlayer().SetFitness((*it)->BlocksPlaced());
+    delete *it;
   }
-
-  qDeleteAll(games);
 }
 
 #endif // ENGINE_H

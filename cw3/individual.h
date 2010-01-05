@@ -1,9 +1,6 @@
 #ifndef INDIVIDUAL_H
 #define INDIVIDUAL_H
 
-#include <QVector>
-#include <QtDebug>
-
 #include <tr1/array>
 #include <limits>
 #include <algorithm>
@@ -80,9 +77,9 @@ class Individual {
                 int x, int orientation) const;
 
   // Sets this individual's fitness from the results of some games
-  void SetFitness(QList<quint64> games);
+  void SetFitness(uint64_t fitness);
   bool HasFitness() const { return has_fitness_; }
-  quint64 Fitness() const { return fitness_; }
+  uint64_t Fitness() const { return fitness_; }
 
   // Compares the fitness and weights.  Will always return false unless both
   // have a fitness (to implement "invalid" default constructed values).
@@ -94,7 +91,7 @@ class Individual {
   RealGenes exponents_;
   RealGenes displacements_;
   bool has_fitness_;
-  quint64 fitness_;
+  uint64_t fitness_;
 
   typedef boost::variate_generator<
       boost::mt19937, boost::normal_distribution<double> > RandomGenType;
@@ -153,11 +150,13 @@ class Individual {
   };
 };
 
-template <typename T, std::size_t N>
-QDebug operator<<(QDebug s, const std::tr1::array<T, N>& a);
+#ifndef QT_NO_DEBUG
+  template <typename T, std::size_t N>
+  QDebug operator<<(QDebug s, const std::tr1::array<T, N>& a);
 
-template <RatingAlgorithm A>
-QDebug operator<<(QDebug s, const Individual<A>& i);
+  template <RatingAlgorithm A>
+  QDebug operator<<(QDebug s, const Individual<A>& i);
+#endif // QT_NO_DEBUG
 
 template <RatingAlgorithm A>
 typename Individual<A>::RandomGenType* Individual<A>::sWeightRandomGen = NULL;
@@ -188,13 +187,8 @@ void Individual<A>::Mutate() {
 }
 
 template <RatingAlgorithm A>
-void Individual<A>::SetFitness(QList<quint64> games) {
-  quint64 running_total = 0;
-
-  foreach (quint64 game, games) {
-    running_total += game;
-  }
-  fitness_ = float(running_total) / games.count();
+void Individual<A>::SetFitness(uint64_t fitness) {
+  fitness_ = fitness;
   has_fitness_ = true;
 }
 
@@ -211,13 +205,13 @@ bool Individual<A>::operator ==(const Individual<A>& other) const {
 template <RatingAlgorithm A>
 template <typename T>
 T Individual<A>::RangeGenerator<T>::operator()() const {
-  return min_ + T((double(qrand()) / RAND_MAX) * range_);
+  return min_ + T((double(rand()) / RAND_MAX) * range_);
 }
 
 template <RatingAlgorithm A>
 template <typename T>
 T Individual<A>::MutateGenerator<T>::operator()() {
-  double r = double(qrand()) / RAND_MAX;
+  double r = double(rand()) / RAND_MAX;
   if (r < p_)
     return double(*(original_it_++)) * (*gen_)();
   else
@@ -227,7 +221,7 @@ T Individual<A>::MutateGenerator<T>::operator()() {
 template <RatingAlgorithm A>
 template <typename T>
 T Individual<A>::CrossoverGenerator<T>::operator()() {
-  T ret = (qrand() % 2) ? *a_ : *b_;
+  T ret = (rand() % 2) ? *a_ : *b_;
 
   ++ a_; ++ b_;
   return ret;
@@ -237,7 +231,7 @@ template <RatingAlgorithm A>
 template <int W, int H>
 double Individual<A>::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
                           int x, int orientation) const {
-  Q_ASSERT(weights_.size() == Criteria_Count);
+  assert(weights_.size() == Criteria_Count);
 
   int y = board.TetraminoHeight(tetramino, x, orientation);
 
@@ -260,21 +254,23 @@ double Individual<A>::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramin
   return Rating(stats);
 }
 
-template <typename T, std::size_t N>
-QDebug operator<<(QDebug s, const std::tr1::array<T, N>& a) {
-  s.nospace() << "(";
-  for (auto it = a.begin() ; it != a.end() ; ++it) {
-    s.nospace() << *it << ", ";
+#ifndef QT_NO_DEBUG
+  template <typename T, std::size_t N>
+  QDebug operator<<(QDebug s, const std::tr1::array<T, N>& a) {
+    s.nospace() << "(";
+    for (auto it = a.begin() ; it != a.end() ; ++it) {
+      s.nospace() << *it << ", ";
+    }
+    s.nospace() << ")";
+
+    return s.maybeSpace();
   }
-  s.nospace() << ")";
 
-  return s.maybeSpace();
-}
-
-template <RatingAlgorithm A>
-QDebug operator<<(QDebug s, const Individual<A>& i) {
-  return s.space() << (i.HasFitness() ? QString::number(i.Fitness()).toAscii().constData() : "??")
-                   << "-" << i.Weights();
-}
+  template <RatingAlgorithm A>
+  QDebug operator<<(QDebug s, const Individual<A>& i) {
+    return s.space() << (i.HasFitness() ? QString::number(i.Fitness()).toAscii().constData() : "??")
+                     << "-" << i.Weights();
+  }
+#endif // QT_NO_DEBUG
 
 #endif // INDIVIDUAL_H
