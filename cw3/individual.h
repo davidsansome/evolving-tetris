@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdlib>
 
+#include <boost/bind.hpp>
 #include <boost/random/variate_generator.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/mersenne_twister.hpp>
@@ -14,6 +15,7 @@
 
 #include "tetrisboard.h"
 #include "individualbase.h"
+#include "messages.pb.h"
 
 class Tetramino;
 
@@ -82,6 +84,9 @@ class Individual : public IndividualBase {
   bool operator ==(const Individual& other) const;
   bool CompareGenes(const Individual& other) const;
 
+  void ToMessage(Messages::Player* message) const;
+  void FromMessage(const Messages::Player& message);
+
  private:
   IntegerGenes weights_;
   RealGenes exponents_;
@@ -89,6 +94,7 @@ class Individual : public IndividualBase {
 
   typedef boost::variate_generator<
       boost::mt19937, boost::normal_distribution<double> > RandomGenType;
+  static boost::mt19937 sRandomEngine;
   static RandomGenType* sWeightRandomGen;
   static RandomGenType* sExponentRandomGen;
   static RandomGenType* sDisplacementRandomGen;
@@ -107,6 +113,8 @@ class Individual : public IndividualBase {
 #endif // QT_NO_DEBUG
 
 template <RatingAlgorithm A>
+boost::mt19937 Individual<A>::sRandomEngine;
+template <RatingAlgorithm A>
 typename Individual<A>::RandomGenType* Individual<A>::sWeightRandomGen = NULL;
 template <RatingAlgorithm A>
 typename Individual<A>::RandomGenType* Individual<A>::sExponentRandomGen = NULL;
@@ -119,11 +127,12 @@ Individual<A>::Individual()
 {
   if (!sWeightRandomGen) {
     sWeightRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_pwmstddev));
+        sRandomEngine, boost::normal_distribution<double>(1.0, FLAGS_pwmstddev));
     sExponentRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_pemstddev));
+        sRandomEngine, boost::normal_distribution<double>(1.0, FLAGS_pemstddev));
     sDisplacementRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_pdmstddev));
+        sRandomEngine, boost::normal_distribution<double>(1.0, FLAGS_pdmstddev));
+    sRandomEngine.seed(Utilities::RandomSeed());
   }
 }
 
@@ -166,6 +175,44 @@ double Individual<A>::Rating(TetrisBoard<W, H>& board, const Tetramino& tetramin
   board.Analyse(&stats);
 
   return Rating(stats);
+}
+
+template <RatingAlgorithm A>
+void Individual<A>::ToMessage(Messages::Player* message) const {
+  switch (A) {
+   case RatingAlgorithm_Linear:
+    message->set_algorithm(Messages::Player_Algorithm_LINEAR);
+    break;
+
+   case RatingAlgorithm_Exponential:
+    message->set_algorithm(Messages::Player_Algorithm_EXPONENTIAL);
+    break;
+
+   case RatingAlgorithm_ExponentialWithDisplacement:
+    message->set_algorithm(Messages::Player_Algorithm_EXPONENTIAL_WITH_DISPLACEMENT);
+    break;
+  }
+
+  message->mutable_weights()->Reserve(weights_.size());
+  message->mutable_exponents()->Reserve(exponents_.size());
+  message->mutable_displacements()->Reserve(displacements_.size());
+
+  std::for_each(weights_.begin(), weights_.end(), boost::bind(
+      &google::protobuf::RepeatedField<google::protobuf::int32>::Add,
+      message->mutable_weights(), _1));
+  std::for_each(exponents_.begin(), exponents_.end(), boost::bind(
+      &google::protobuf::RepeatedField<double>::Add,
+      message->mutable_exponents(), _1));
+  std::for_each(displacements_.begin(), displacements_.end(), boost::bind(
+      &google::protobuf::RepeatedField<double>::Add,
+      message->mutable_displacements(), _1));
+}
+
+template <RatingAlgorithm A>
+void Individual<A>::FromMessage(const Messages::Player& message) {
+  std::copy(message.weights().begin(), message.weights().end(), weights_.begin());
+  std::copy(message.exponents().begin(), message.exponents().end(), exponents_.begin());
+  std::copy(message.displacements().begin(), message.displacements().end(), displacements_.begin());
 }
 
 #ifndef QT_NO_DEBUG

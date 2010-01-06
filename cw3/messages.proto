@@ -1,0 +1,43 @@
+package Messages;
+
+message BoardType {
+  optional int32 width = 1;
+}
+
+message Player {
+  enum Algorithm {
+    LINEAR = 0;
+    EXPONENTIAL = 1;
+    EXPONENTIAL_WITH_DISPLACEMENT = 2;
+  }
+  
+  optional Algorithm algorithm = 1;
+  repeated sint32 weights = 2;
+  repeated double exponents = 3;
+  repeated double displacements = 4;
+}
+
+message BlockSelectorRandom {
+}
+
+message BlockSelectorSequence {
+  optional string sequence = 1;
+}
+
+message GameRequest {
+  optional int32 player_id = 1;
+  optional int32 selector_id = 2;
+  
+  optional BoardType board = 3;
+  optional Player player = 4;
+  
+  // Only one of the following
+  optional BlockSelectorRandom selector_random = 5;
+  optional BlockSelectorSequence selector_sequence = 6;
+}
+
+message GameResponse {
+  optional int32 player_id = 1;
+  optional int32 selector_id = 2;
+  optional int64 blocks_placed = 3;
+}

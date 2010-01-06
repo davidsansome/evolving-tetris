@@ -136,6 +136,8 @@ namespace Utilities {
     iterator_type a_;
     iterator_type b_;
   };
+
+  unsigned int RandomSeed();
 }
 
 #endif // UTILITIES_H

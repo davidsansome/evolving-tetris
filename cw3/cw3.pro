@@ -8,7 +8,9 @@ SOURCES += main.cpp \
     tetramino.cpp \
     blockselector_random.cpp \
     blockselector_sequence.cpp \
-    individualbase.cpp
+    individualbase.cpp \
+    gamemapper.cpp \
+    utilities.cpp
 HEADERS += individual.h \
     tetrisboard.h \
     tetramino.h \
@@ -18,9 +20,12 @@ HEADERS += individual.h \
     utilities.h \
     blockselector_random.h \
     blockselector_sequence.h \
-    individualbase.h
-CONFIG(release):# For cassert
-DEFINES += NDEBUG
+    individualbase.h \
+    gamemapper.h
+PROTOBUF_SOURCES += messages.proto
+
+CONFIG(release):DEFINES += NDEBUG # For cassert
+
 CONFIG(debug, debug|release) { 
     # Testing
     QT += testlib
@@ -35,6 +40,18 @@ CONFIG(debug, debug|release) {
 # google-perftools
 # LIBS += -lprofiler
 # CONFIG(release):QMAKE_CXXFLAGS += -g
+
 # google-gflags
 LIBS += -lgflags
 QMAKE_CXXFLAGS += --std=c++0x
+
+# protobuf
+protobuf_cpp.input = PROTOBUF_SOURCES
+protobuf_cpp.output = ${QMAKE_FILE_IN_BASE}.pb.cc
+protobuf_cpp.commands = protoc \
+    --cpp_out=. \
+    ${QMAKE_FILE_IN}
+protobuf_cpp.variable_out = SOURCES
+OTHER_FILES += $${PROTOBUF_SOURCES}
+QMAKE_EXTRA_COMPILERS += protobuf_cpp
+LIBS += -lprotobuf

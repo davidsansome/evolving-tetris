@@ -6,6 +6,7 @@
 
 #include <limits>
 #include <math.h>
+#include <cstdint>
 
 template <typename PlayerType, typename SelectorType, typename BoardType>
 class Game {
@@ -15,9 +16,6 @@ class Game {
   PlayerType& GetPlayer() const { return player_; }
   SelectorType& GetBlockSelector() const { return block_selector_; }
   const BoardType& GetBoard() const { return board_; }
-
-  void SetData(void* data) { data_ = data; }
-  void* Data() const { return data_; }
 
   // Plays a game of tetris, finishing when there's no room for any more blocks
   void Play();
@@ -30,7 +28,6 @@ class Game {
 
   PlayerType& player_;
   SelectorType& block_selector_;
-  void* data_;
 
   BoardType board_;
   Tetramino next_tetramino_;
@@ -38,14 +35,12 @@ class Game {
   uint64_t blocks_placed_;
 };
 
-#include "individual.h"
 
 template <typename PlayerType, typename SelectorType, typename BoardType>
 Game<PlayerType, SelectorType, BoardType>::Game(PlayerType& player,
                                                 SelectorType& block_selector)
     : player_(player),
       block_selector_(block_selector),
-      data_(NULL),
       blocks_placed_(0)
 {
   board_.Clear();

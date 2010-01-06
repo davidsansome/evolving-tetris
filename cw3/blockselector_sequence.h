@@ -10,12 +10,13 @@
 #include "tetramino.h"
 #include "utilities.h"
 #include "individualbase.h"
+#include "messages.pb.h"
 
 DECLARE_double(smrate);
 
 namespace BlockSelector {
 
-  template <int N>
+  template <int N = 1000000>
   class Sequence : public IndividualBase {
    public:
     Sequence();
@@ -40,16 +41,22 @@ namespace BlockSelector {
 
     const SequenceType& GetSequence() const { return sequence_; }
 
+    void ToMessage(Messages::BlockSelectorSequence* message);
+    void FromMessage(const Messages::GameRequest&);
+
    private:
     SequenceType sequence_;
     uint64_t next_index_;
 
     typedef boost::variate_generator<
         boost::mt19937, boost::uniform_smallint<> > RandomGenType;
+    static boost::mt19937 sRandomEngine;
     static RandomGenType* sRandomGen;
   };
 
 
+  template <int N>
+  boost::mt19937 Sequence<N>::sRandomEngine;
   template <int N>
   typename Sequence<N>::RandomGenType* Sequence<N>::sRandomGen = NULL;
 
@@ -60,7 +67,8 @@ namespace BlockSelector {
   {
     if (sRandomGen == NULL) {
       sRandomGen = new RandomGenType(
-          boost::mt19937(), Tetramino::kTypeRange);
+          sRandomEngine, Tetramino::kTypeRange);
+      sRandomEngine.seed(Utilities::RandomSeed());
     }
   }
 
@@ -110,6 +118,18 @@ namespace BlockSelector {
   template <int N>
   bool Sequence<N>::operator ==(const Sequence& other) const {
     return sequence_ == other.sequence_;
+  }
+
+  template <int N>
+  void Sequence<N>::ToMessage(Messages::BlockSelectorSequence* message) {
+    message->mutable_sequence()->resize(N);
+    std::copy(sequence_.begin(), sequence_.end(), message->mutable_sequence()->begin());
+  }
+
+  template <int N>
+  void Sequence<N>::FromMessage(const Messages::GameRequest& req) {
+    std::copy(req.selector_sequence().sequence().begin(),
+              req.selector_sequence().sequence().end(), sequence_.begin());
   }
 
 } // namespace BlockSelector

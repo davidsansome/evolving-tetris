@@ -1,7 +1,6 @@
 #include "engine.h"
 
 #include <google/gflags.h>
-#include <sys/time.h>
 
 DEFINE_string(algo, "l", "board rating function - l, e or ed");
 DEFINE_string(size, "6x12", "board size");
@@ -56,9 +55,7 @@ int main(int argc, char** argv) {
 #endif
 
   // Seed random number generator
-  timeval tv;
-  gettimeofday(&tv, NULL);
-  srand(tv.tv_usec * tv.tv_sec);
+  srand(Utilities::RandomSeed());
 
   if      (FLAGS_size == "5x10") Run<5,10>();
   else if (FLAGS_size == "6x12") Run<6,12>();

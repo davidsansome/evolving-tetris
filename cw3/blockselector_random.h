@@ -6,6 +6,7 @@
 #include <boost/random/mersenne_twister.hpp>
 
 #include "individualbase.h"
+#include "messages.pb.h"
 
 namespace BlockSelector {
 
@@ -31,6 +32,8 @@ namespace BlockSelector {
     void Mutate();*/
 
     const GeneType& Gene() const { return seed_; }
+
+    void FromMessage(const Messages::GameRequest&) {}
 
    private:
     GeneType seed_;

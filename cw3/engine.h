@@ -6,6 +6,7 @@
 #include "individual.h"
 #include "blockselector_sequence.h"
 #include "blockselector_random.h"
+#include "gamemapper.h"
 
 #include <QtConcurrentMap>
 
@@ -29,7 +30,7 @@ class Engine {
  public:
   Engine();
 
-  typedef BlockSelector::Sequence<1000000> SelectorType;
+  typedef BlockSelector::Sequence<> SelectorType;
   typedef Game<PlayerType, SelectorType, BoardType> GameType;
   typedef Game<PlayerType, BlockSelector::Random, BoardType> RandomGameType;
 
@@ -185,74 +186,79 @@ void Engine<PlayerType, BoardType>::Run() {
 template <typename PlayerType, typename BoardType>
 void Engine<PlayerType, BoardType>::UpdateFitness() {
   // Create games
-  std::vector<GameType*> games;
+  std::vector<Messages::GameRequest> requests;
 
   for (int i = 0 ; i < FLAGS_pop ; ++i) {
-    GameType* game = new GameType(player_pop_[i], selector_pop_[i]);
-    games.push_back(game);
+    Messages::GameRequest req;
+    req.set_player_id(i);
+    req.set_selector_id(i);
+    player_pop_[i].ToMessage(req.mutable_player());
+    selector_pop_[i].ToMessage(req.mutable_selector_sequence());
+    BoardType::ToMessage(req.mutable_board());
+
+    requests.push_back(req);
   }
 
-  if (games.size() == 0)
+  if (requests.size() == 0)
     return;
 
   // Run games
-  QFuture<void> future = QtConcurrent::map(
-      games, PointerMemberFunctionWrapper<void, GameType>(&GameType::Play));
+  QFuture<Messages::GameResponse> future = QtConcurrent::mapped(
+      requests, boost::bind(&GameMapper::Map, _1));
   future.waitForFinished();
+  QList<Messages::GameResponse> responses = future.results();
 
   // Update the fitness for each player
   // And prepare more games for each player against random sequences
-  std::vector<RandomGameType*> random_games;
+  requests.clear();
 
-  for (auto it = games.begin() ; it != games.end() ; ++it) {
-    (*it)->GetPlayer().SetFitness((*it)->BlocksPlaced());
+  for (auto it = responses.begin() ; it != responses.end() ; ++it) {
+    const Messages::GameResponse& resp = *it;
+
+    player_pop_[resp.player_id()].SetFitness(resp.blocks_placed());
 
     for (int i=0 ; i<FLAGS_games ; ++i) {
-      BlockSelector::Random* random_selector = new BlockSelector::Random;
-      random_selector->SetSeed(rand());
+      Messages::GameRequest req;
+      req.set_player_id(resp.player_id());
+      req.set_selector_id(resp.selector_id());
+      player_pop_[resp.player_id()].ToMessage(req.mutable_player());
+      req.mutable_selector_random();
+      BoardType::ToMessage(req.mutable_board());
 
-      RandomGameType* random_game = new RandomGameType(
-          (*it)->GetPlayer(), *random_selector);
-      random_game->SetData(*it);
-
-      random_games.push_back(random_game);
+      requests.push_back(req);
     }
   }
 
   // Run these random games
-  future = QtConcurrent::map(
-      random_games, PointerMemberFunctionWrapper<void, RandomGameType>(&RandomGameType::Play));
+  future = QtConcurrent::mapped(
+      requests, boost::bind(&GameMapper::Map, _1));
   future.waitForFinished();
+  responses = future.results();
 
-  for (auto it = random_games.begin() ; it != random_games.end() ; ++it) {
-    // Get the original game back out
-    GameType* original_game = static_cast<GameType*>((*it)->Data());
+  for (auto it = responses.begin() ; it != responses.end() ; ++it) {
+    const Messages::GameResponse& resp = *it;
 
-    int64_t original_fitness = (*it)->GetPlayer().Fitness();
-    int64_t random_fitness = (*it)->BlocksPlaced();
+    int64_t original_fitness = player_pop_[resp.player_id()].Fitness();
+    int64_t random_fitness = resp.blocks_placed();
     int64_t diff = std::abs(original_fitness - random_fitness);
 
-    original_game->GetBlockSelector().SetFitness(
-        original_game->GetBlockSelector().Fitness() + diff);
-
-    delete &((*it)->GetBlockSelector());
-    delete (*it);
+    selector_pop_[resp.selector_id()].SetFitness(
+        selector_pop_[resp.selector_id()].Fitness() + diff);
   }
 
   // Normalise the fitness of our sequences
-  for (auto it = games.begin() ; it != games.end() ; ++it) {
+  for (int i = 0 ; i < FLAGS_pop ; ++i) {
     // The block selector's fitness now is the sum of all the fitnesses against
     // random sequences.  To find out how different this sequence was to the
     // random landscape we want to normalise for:
     //  a) The number of random games
     //  b) The original fitness
     // We also want to invert the score (since lower numbers were better).
+    SelectorType& selector = selector_pop_[i];
 
-    (*it)->GetBlockSelector().SetFitness(
-        std::max(0.0, 2.0 - double((*it)->GetBlockSelector().Fitness()) /
-            (FLAGS_games * (*it)->GetPlayer().Fitness())) * 1000);
-
-    delete (*it);
+    selector.SetFitness(
+        std::max(0.0, 2.0 - double(selector.Fitness()) /
+            (FLAGS_games * player_pop_[i].Fitness())) * 1000);
   }
 }
 

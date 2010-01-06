@@ -3,6 +3,7 @@
 
 #include "tetramino.h"
 #include "utilities.h"
+#include "messages.pb.h"
 
 #include <algorithm>
 #include <tr1/array>
@@ -49,6 +50,8 @@ class TetrisBoard {
 
   inline const bool& Cell(int x, int y) const;
   inline const bool& operator()(int x, int y) const { return Cell(x, y); }
+
+  static void ToMessage(Messages::BoardType* message);
 
 #ifndef QT_NO_DEBUG
   // Only for unit tests that need to set cells explicitly
@@ -140,7 +143,7 @@ void TetrisBoard<W,H>::Add(const Tetramino& tetramino, int x, int y, int orienta
     assert(!Cell(px, py));
 
     SetCell(px, py, true);
-    highest_cell_[px] = qMin(highest_cell_[px], py);
+    highest_cell_[px] = std::min(highest_cell_[px], py);
 
     point++;
   }
@@ -206,8 +209,8 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
   for (auto it = highest_cell_.begin() ; it != highest_cell_.end() ; ++it) {
     if (*it != H) total_blocks ++;
     weighted_total_blocks += H - *it;
-    pile_height = qMin(*it, pile_height);
-    max_pile_height = qMax(*it, max_pile_height);
+    pile_height = std::min(*it, pile_height);
+    max_pile_height = std::max(*it, max_pile_height);
   }
   pile_height = H - pile_height;
   max_pile_height = H - max_pile_height;
@@ -224,7 +227,7 @@ void TetrisBoard<W,H>::Analyse(BoardStats* stats) const {
     } else if (x == W-1) {
       well_depth = highest - highest_cell_[x-1];
     } else {
-      well_depth = highest - qMax(highest_cell_[x-1], highest_cell_[x+1]);
+      well_depth = highest - std::max(highest_cell_[x-1], highest_cell_[x+1]);
     }
 
     sum_well_depth += std::max(0, well_depth);
@@ -313,6 +316,11 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
     }
   }
   return H - size.height();
+}
+
+template <int W, int H>
+void TetrisBoard<W,H>::ToMessage(Messages::BoardType* message) {
+  message->set_width(W);
 }
 
 #ifndef QT_NO_DEBUG
