@@ -29,7 +29,7 @@ class Engine {
  public:
   Engine();
 
-  typedef BlockSelector::Sequence<1000> SelectorType;
+  typedef BlockSelector::Sequence<100000> SelectorType;
   typedef Game<PlayerType, SelectorType, BoardType> GameType;
   typedef Game<PlayerType, BlockSelector::Random, BoardType> RandomGameType;
 

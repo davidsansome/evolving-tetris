@@ -38,7 +38,7 @@ namespace BlockSelector {
     void Mutate();
     bool operator ==(const Sequence& other) const;
 
-    SequenceType GetSequence() const { return sequence_; }
+    const SequenceType& GetSequence() const { return sequence_; }
 
    private:
     SequenceType sequence_;

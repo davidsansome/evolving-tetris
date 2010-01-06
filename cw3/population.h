@@ -10,6 +10,8 @@
 #include <cstdint>
 #include <iostream>
 
+#include <boost/type_traits/remove_reference.hpp>
+
 template <typename IndividualType>
 class Population {
  public:
@@ -87,7 +89,7 @@ template <typename IndividualType>
 template <typename ChromosomeAccessor>
 double Population<IndividualType>::Diversity(
     const ChromosomeAccessor& accessor) const {
-  typedef typename ChromosomeAccessor::result_type accessor_result_type;
+  typedef typename boost::remove_reference<typename ChromosomeAccessor::result_type>::type accessor_result_type;
   typedef typename accessor_result_type::value_type GeneType;
 
   const int count = accessor(&individuals_[0]).size();
