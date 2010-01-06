@@ -1,13 +1,14 @@
 #ifndef POPULATION_H
 #define POPULATION_H
 
-#include "individual.h"
 #include "utilities.h"
 
 #include <algorithm>
 #include <vector>
 #include <cstdlib>
 #include <cassert>
+#include <cstdint>
+#include <iostream>
 
 template <typename IndividualType>
 class Population {
@@ -27,6 +28,8 @@ class Population {
   double Diversity(const ChromosomeAccessor& accessor) const;
 
   void Replace(int i, const IndividualType& replacement);
+
+  void NextGeneration();
 
  private:
   std::vector<IndividualType> individuals_;
@@ -84,7 +87,8 @@ template <typename IndividualType>
 template <typename ChromosomeAccessor>
 double Population<IndividualType>::Diversity(
     const ChromosomeAccessor& accessor) const {
-  typedef typename ChromosomeAccessor::result_type::value_type GeneType;
+  typedef typename ChromosomeAccessor::result_type accessor_result_type;
+  typedef typename accessor_result_type::value_type GeneType;
 
   const int count = accessor(&individuals_[0]).size();
 
@@ -133,6 +137,28 @@ IndividualType& Population<IndividualType>::SelectFitnessProportionate(const Ind
 template <typename IndividualType>
 void Population<IndividualType>::Replace(int i, const IndividualType& replacement) {
   individuals_[i] = replacement;
+}
+
+template <typename IndividualType>
+void Population<IndividualType>::NextGeneration() {
+  const int size = individuals_.size();
+
+  Population new_population(size);
+  for (int i=0 ; i<size ; ++i) {
+    // Pick two parents from the original population
+    const IndividualType& parent1 = SelectFitnessProportionate();
+    const IndividualType& parent2 = SelectFitnessProportionate(parent1);
+
+    // Make a baby
+    IndividualType child;
+    child.Crossover(parent1, parent2);
+    child.Mutate();
+
+    // Put the child into the new population
+    new_population.Replace(i, child);
+  }
+
+  individuals_ = new_population.individuals_;
 }
 
 #endif // POPULATION_H

@@ -1,5 +1,4 @@
 #include "engine.h"
-#include "blockselector_random.h"
 
 #include <google/gflags.h>
 #include <sys/time.h>
@@ -25,7 +24,7 @@ DEFINE_string(size, "6x12", "board size");
 
 template <typename IndividualType, int W, int H>
 void Run2() {
-  Engine<IndividualType, BlockSelector::Random, TetrisBoard<W, H> > e;
+  Engine<IndividualType, TetrisBoard<W, H> > e;
   e.Run();
 }
 

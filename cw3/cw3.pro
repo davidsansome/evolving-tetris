@@ -6,7 +6,9 @@ TEMPLATE = app
 SOURCES += main.cpp \
     individual.cpp \
     tetramino.cpp \
-    blockselector_random.cpp
+    blockselector_random.cpp \
+    blockselector_sequence.cpp \
+    individualbase.cpp
 HEADERS += individual.h \
     tetrisboard.h \
     tetramino.h \
@@ -14,27 +16,25 @@ HEADERS += individual.h \
     engine.h \
     population.h \
     utilities.h \
-    blockselector_random.h
-
-CONFIG(release) {
-  # For cassert
-  DEFINES += NDEBUG
-}
-
+    blockselector_random.h \
+    blockselector_sequence.h \
+    individualbase.h
+CONFIG(release):# For cassert
+DEFINES += NDEBUG
 CONFIG(debug, debug|release) { 
-  # Testing
-  QT += testlib
-  SOURCES += test_board.cpp test_tetramino.cpp
-  HEADERS += test_board.h test_tetramino.h
-  QMAKE_POST_LINK = ./cw3 \
-      t
+    # Testing
+    QT += testlib
+    SOURCES += test_board.cpp \
+        test_tetramino.cpp
+    HEADERS += test_board.h \
+        test_tetramino.h
+    QMAKE_POST_LINK = ./cw3 \
+        t
 }
 
 # google-perftools
-#LIBS += -lprofiler
-#CONFIG(release):QMAKE_CXXFLAGS += -g
-
+# LIBS += -lprofiler
+# CONFIG(release):QMAKE_CXXFLAGS += -g
 # google-gflags
 LIBS += -lgflags
-
 QMAKE_CXXFLAGS += --std=c++0x

@@ -21,7 +21,7 @@ class Tetramino {
   static const int kTypeCount;
   static const int kBlockSize;
   static const int kPointsCount;
-  static const boost::uniform_smallint<> kTypeRange;
+  static boost::uniform_smallint<> kTypeRange;
 
  private:
   Tetramino(const Tetramino&) {}

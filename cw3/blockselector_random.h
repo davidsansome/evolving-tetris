@@ -5,10 +5,12 @@
 
 #include <boost/random/mersenne_twister.hpp>
 
+#include "individualbase.h"
+
 namespace BlockSelector {
 
-  class Random {
-  public:
+  class Random : public IndividualBase {
+   public:
     Random();
 
     typedef uint32_t SeedType;
@@ -18,6 +20,7 @@ namespace BlockSelector {
     SeedType GetSeed() const { return seed_[0]; }
 
     // BlockSelector
+    void Reset();
     int operator()();
 
     // Individual
@@ -29,12 +32,12 @@ namespace BlockSelector {
 
     const GeneType& Gene() const { return seed_; }
 
-  private:
+   private:
     GeneType seed_;
 
     boost::mt19937 random_engine_;
   };
 
-}
+} // namespace BlockSelector
 
 #endif

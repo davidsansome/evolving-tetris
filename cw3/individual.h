@@ -13,6 +13,7 @@
 #include <google/gflags.h>
 
 #include "tetrisboard.h"
+#include "individualbase.h"
 
 class Tetramino;
 
@@ -39,13 +40,13 @@ enum Criteria {
   Criteria_Count,
 };
 
-DECLARE_double(mstddev);
-DECLARE_double(emstddev);
-DECLARE_double(dmstddev);
+DECLARE_double(pwmstddev);
+DECLARE_double(pemstddev);
+DECLARE_double(pdmstddev);
 
 
 template <RatingAlgorithm A>
-class Individual {
+class Individual : public IndividualBase {
  public:
   Individual();
 
@@ -76,11 +77,6 @@ class Individual {
   double Rating(TetrisBoard<W, H>& board, const Tetramino& tetramino,
                 int x, int orientation) const;
 
-  // Sets this individual's fitness from the results of some games
-  void SetFitness(uint64_t fitness);
-  bool HasFitness() const { return has_fitness_; }
-  uint64_t Fitness() const { return fitness_; }
-
   // Compares the fitness and weights.  Will always return false unless both
   // have a fitness (to implement "invalid" default constructed values).
   bool operator ==(const Individual& other) const;
@@ -90,8 +86,6 @@ class Individual {
   IntegerGenes weights_;
   RealGenes exponents_;
   RealGenes displacements_;
-  bool has_fitness_;
-  uint64_t fitness_;
 
   typedef boost::variate_generator<
       boost::mt19937, boost::normal_distribution<double> > RandomGenType;
@@ -102,52 +96,6 @@ class Individual {
   // The specialisations of this function use our weights, exponents and
   // displacements to find a rating for a BoardStats struct
   double Rating(const BoardStats& stats) const;
-
-  // These generators are compatiable with std::generate from <algorithms>.
-  // They are used to set new values for an individual.
-
-  // Generates random numbers from a range.
-  template <typename T>
-  class RangeGenerator {
-   public:
-    RangeGenerator(T min, T max) : min_(min), range_(max-min) {}
-    T operator()() const;
-
-   private:
-    T min_;
-    T range_;
-  };
-
-  // Mutates each value by multiplying it by a normally distributed random
-  // number with mean = 1.0 and kStandardDeviation.
-  template <typename T>
-  class MutateGenerator {
-   public:
-    typedef const T* iterator_type;
-
-    MutateGenerator(double p, RandomGenType* gen, iterator_type original_it)
-        : p_(p), original_it_(original_it), gen_(gen) {}
-    T operator()();
-
-   private:
-    double p_;
-    iterator_type original_it_;
-    RandomGenType* gen_;
-  };
-
-  template <typename T>
-  class CrossoverGenerator {
-   public:
-    typedef const T* iterator_type;
-
-    CrossoverGenerator(iterator_type a, iterator_type b)
-      : a_(a), b_(b) {}
-    T operator()();
-
-   private:
-    iterator_type a_;
-    iterator_type b_;
-  };
 };
 
 #ifndef QT_NO_DEBUG
@@ -168,16 +116,14 @@ typename Individual<A>::RandomGenType* Individual<A>::sDisplacementRandomGen = N
 
 template <RatingAlgorithm A>
 Individual<A>::Individual()
-    : has_fitness_(false),
-      fitness_(0)
 {
   if (!sWeightRandomGen) {
     sWeightRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_mstddev));
+        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_pwmstddev));
     sExponentRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_emstddev));
+        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_pemstddev));
     sDisplacementRandomGen = new RandomGenType(
-        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_dmstddev));
+        boost::mt19937(), boost::normal_distribution<double>(1.0, FLAGS_pdmstddev));
   }
 }
 
@@ -187,44 +133,12 @@ void Individual<A>::Mutate() {
 }
 
 template <RatingAlgorithm A>
-void Individual<A>::SetFitness(uint64_t fitness) {
-  fitness_ = fitness;
-  has_fitness_ = true;
-}
-
-template <RatingAlgorithm A>
 bool Individual<A>::operator ==(const Individual<A>& other) const {
-  if (!has_fitness_ || !other.has_fitness_)
+  if (!HasFitness() || !other.HasFitness())
     return false;
-  if (fitness_ != other.fitness_)
+  if (Fitness() != other.Fitness())
     return false;
   return CompareGenes(other);
-}
-
-
-template <RatingAlgorithm A>
-template <typename T>
-T Individual<A>::RangeGenerator<T>::operator()() const {
-  return min_ + T((double(rand()) / RAND_MAX) * range_);
-}
-
-template <RatingAlgorithm A>
-template <typename T>
-T Individual<A>::MutateGenerator<T>::operator()() {
-  double r = double(rand()) / RAND_MAX;
-  if (r < p_)
-    return double(*(original_it_++)) * (*gen_)();
-  else
-    return *(original_it_++);
-}
-
-template <RatingAlgorithm A>
-template <typename T>
-T Individual<A>::CrossoverGenerator<T>::operator()() {
-  T ret = (rand() % 2) ? *a_ : *b_;
-
-  ++ a_; ++ b_;
-  return ret;
 }
 
 template <RatingAlgorithm A>

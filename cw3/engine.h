@@ -4,6 +4,8 @@
 #include "population.h"
 #include "game.h"
 #include "individual.h"
+#include "blockselector_sequence.h"
+#include "blockselector_random.h"
 
 #include <QtConcurrentMap>
 
@@ -12,21 +14,24 @@
 #include <boost/bind.hpp>
 #include <sys/time.h>
 
-DEFINE_int32(ppop, 128, "number of individuals in the player population");
-DEFINE_int32(spop, 128, "number of individuals in the block selector population");
+DEFINE_int32(pop, 128, "number of individuals in the population");
 DEFINE_int32(generations, 30, "number of generations to run for");
+DEFINE_int32(games, 32, "number of random games to compare each block selector against");
 DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
-DECLARE_double(mrate);
-DECLARE_double(mstddev);
-DECLARE_double(emstddev);
-DECLARE_double(dmstddev);
+DECLARE_double(smrate);
+DECLARE_double(pmrate);
+DECLARE_double(pwmstddev);
+DECLARE_double(pemstddev);
+DECLARE_double(pdmstddev);
 
-template <typename PlayerType, typename SelectorType, typename BoardType>
+template <typename PlayerType, typename BoardType>
 class Engine {
  public:
   Engine();
 
+  typedef BlockSelector::Sequence<1000> SelectorType;
   typedef Game<PlayerType, SelectorType, BoardType> GameType;
+  typedef Game<PlayerType, BlockSelector::Random, BoardType> RandomGameType;
 
   void Run();
 
@@ -57,21 +62,21 @@ class Engine {
   };
 };
 
-template <typename PlayerType, typename SelectorType, typename BoardType>
-Engine<PlayerType, SelectorType, BoardType>::Engine()
-    : player_pop_(FLAGS_ppop),
-      selector_pop_(FLAGS_spop)
+template <typename PlayerType, typename BoardType>
+Engine<PlayerType, BoardType>::Engine()
+    : player_pop_(FLAGS_pop),
+      selector_pop_(FLAGS_pop)
 {
 }
 
-template <typename PlayerType, typename SelectorType, typename BoardType>
-const PlayerType& Engine<PlayerType, SelectorType, BoardType>::FittestOf(
+template <typename PlayerType, typename BoardType>
+const PlayerType& Engine<PlayerType, BoardType>::FittestOf(
     const PlayerType& one, const PlayerType& two) {
   return (one.Fitness() > two.Fitness()) ? one : two;
 }
 
-template <typename PlayerType, typename SelectorType, typename BoardType>
-void Engine<PlayerType, SelectorType, BoardType>::Run() {
+template <typename PlayerType, typename BoardType>
+void Engine<PlayerType, BoardType>::Run() {
   player_pop_.InitRandom();
   selector_pop_.InitRandom();
 
@@ -80,15 +85,16 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
 
   QThreadPool::globalInstance()->setMaxThreadCount(FLAGS_threads);
 
-  cout << "# Population size (players) " << FLAGS_ppop << endl;
-  cout << "# Population size (block selectors) " << FLAGS_spop << endl;
+  cout << "# Population size " << FLAGS_pop << endl;
+  cout << "# Games " << FLAGS_games << endl;
   cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
-  cout << "# Mutation std dev (weights) " << FLAGS_mstddev << endl;
+  cout << "# Mutation std dev (player weights) " << FLAGS_pwmstddev << endl;
   if (PlayerType::HasExponents())
-    cout << "# Mutation std dev (exponents) " << FLAGS_emstddev << endl;
+    cout << "# Mutation std dev (player exponents) " << FLAGS_pemstddev << endl;
   if (PlayerType::HasDisplacements())
-    cout << "# Mutation std dev (displacements) " << FLAGS_dmstddev << endl;
-  cout << "# Mutation rate " << FLAGS_mrate << endl;
+    cout << "# Mutation std dev (player displacements) " << FLAGS_pdmstddev << endl;
+  cout << "# Mutation rate (player genes) " << FLAGS_pmrate << endl;
+  cout << "# Mutation rate (block selector genes) " << FLAGS_smrate << endl;
   cout << "# Generations " << FLAGS_generations << endl;
   cout << "# Threads " << FLAGS_threads << endl;
   cout << "# Board rating function " << PlayerType::NameOfAlgorithm() << endl;
@@ -99,9 +105,12 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
 
   cout << endl;
   cout << "Gen\t"
-          "Max\t"
-          "Mean\t"
-          "Min\t";
+          "Max-p\t"
+          "Mean-p\t"
+          "Min-p\t"
+          "Max-s\t"
+          "Mean-s\t"
+          "Min-s\t";
 
   for (int i=0 ; i<Criteria_Count ; ++i)
     cout << "w" << i << "\t";
@@ -115,11 +124,12 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
       cout << "d" << i << "\t";
 
   cout << "Time\t"
-       << "sd-w";
+       << "sd-w\t";
   if (PlayerType::HasExponents())
-    cout << "\tsd-e";
+    cout << "sd-e\t";
   if (PlayerType::HasDisplacements())
-    cout << "\tsd-d";
+    cout << "sd-d\t";
+  cout << "sd-s";
   cout << endl;
 
   cout.precision(3);
@@ -140,7 +150,10 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
     cout << generation_count << "\t" <<
             player_pop_.Fittest().Fitness() << "\t" <<
             player_pop_.MeanFitness() << "\t" <<
-            player_pop_.LeastFit().Fitness() << "\t";
+            player_pop_.LeastFit().Fitness() << "\t" <<
+            selector_pop_.Fittest().Fitness() << "\t" <<
+            selector_pop_.MeanFitness() << "\t" <<
+            selector_pop_.LeastFit().Fitness() << "\t";
 
     for (int i=0 ; i<Criteria_Count ; ++i)
       cout << player_pop_.Fittest().Weights()[i] << "\t";
@@ -154,47 +167,28 @@ void Engine<PlayerType, SelectorType, BoardType>::Run() {
         cout << player_pop_.Fittest().Displacements()[i] << "\t";
 
     cout << time_taken << "\t" <<
-        player_pop_.Diversity(boost::bind(&PlayerType::Weights, _1));
+        player_pop_.Diversity(boost::bind(&PlayerType::Weights, _1)) << "\t";
 
     if (PlayerType::HasExponents())
-      cout << "\t" << player_pop_.Diversity(boost::bind(&PlayerType::Exponents, _1));
+      cout << player_pop_.Diversity(boost::bind(&PlayerType::Exponents, _1)) << "\t";
     if (PlayerType::HasDisplacements())
-      cout << "\t" << player_pop_.Diversity(boost::bind(&PlayerType::Displacements, _1));
+      cout << player_pop_.Diversity(boost::bind(&PlayerType::Displacements, _1)) << "\t";
+    cout << selector_pop_.Diversity(boost::bind(&SelectorType::GetSequence, _1));
     cout << endl;
 
-    // Make a new population
-    Population<PlayerType> player_pop2(FLAGS_ppop);
-
-    for (int i=0 ; i<FLAGS_ppop ; ++i) {
-      // Pick two parents from the original population
-      const PlayerType& parent1 = player_pop_.SelectFitnessProportionate();
-      const PlayerType& parent2 = player_pop_.SelectFitnessProportionate(parent1);
-
-      // Make a baby
-      PlayerType child;
-      child.Crossover(parent1, parent2);
-      child.Mutate();
-
-      // Put the child into the new population
-      player_pop2.Replace(i, child);
-    }
-
-    // Use the new population
-    player_pop_ = player_pop2;
+    // Make new populations
+    player_pop_.NextGeneration();
+    selector_pop_.NextGeneration();
   }
 }
 
-template <typename PlayerType, typename SelectorType, typename BoardType>
-void Engine<PlayerType, SelectorType, BoardType>::UpdateFitness() {
+template <typename PlayerType, typename BoardType>
+void Engine<PlayerType, BoardType>::UpdateFitness() {
   // Create games
   std::vector<GameType*> games;
 
-  for (int i = 0 ; i < FLAGS_ppop ; ++i) {
-    PlayerType& individual = player_pop_[i];
-    if (individual.HasFitness())
-      continue;
-
-    GameType* game = new GameType(individual, selector_pop_[0]);
+  for (int i = 0 ; i < FLAGS_pop ; ++i) {
+    GameType* game = new GameType(player_pop_[i], selector_pop_[i]);
     games.push_back(game);
   }
 
@@ -206,10 +200,59 @@ void Engine<PlayerType, SelectorType, BoardType>::UpdateFitness() {
       games, PointerMemberFunctionWrapper<void, GameType>(&GameType::Play));
   future.waitForFinished();
 
-  // Update the fitness for each one
+  // Update the fitness for each player
+  // And prepare more games for each player against random sequences
+  std::vector<RandomGameType*> random_games;
+
   for (auto it = games.begin() ; it != games.end() ; ++it) {
     (*it)->GetPlayer().SetFitness((*it)->BlocksPlaced());
-    delete *it;
+
+    for (int i=0 ; i<FLAGS_games ; ++i) {
+      BlockSelector::Random* random_selector = new BlockSelector::Random;
+      random_selector->SetSeed(rand());
+
+      RandomGameType* random_game = new RandomGameType(
+          (*it)->GetPlayer(), *random_selector);
+      random_game->SetData(*it);
+
+      random_games.push_back(random_game);
+    }
+  }
+
+  // Run these random games
+  future = QtConcurrent::map(
+      random_games, PointerMemberFunctionWrapper<void, RandomGameType>(&RandomGameType::Play));
+  future.waitForFinished();
+
+  for (auto it = random_games.begin() ; it != random_games.end() ; ++it) {
+    // Get the original game back out
+    GameType* original_game = static_cast<GameType*>((*it)->Data());
+
+    int64_t original_fitness = (*it)->GetPlayer().Fitness();
+    int64_t random_fitness = (*it)->BlocksPlaced();
+    int64_t diff = std::abs(original_fitness - random_fitness);
+
+    original_game->GetBlockSelector().SetFitness(
+        original_game->GetBlockSelector().Fitness() + diff);
+
+    delete &((*it)->GetBlockSelector());
+    delete (*it);
+  }
+
+  // Normalise the fitness of our sequences
+  for (auto it = games.begin() ; it != games.end() ; ++it) {
+    // The block selector's fitness now is the sum of all the fitnesses against
+    // random sequences.  To find out how different this sequence was to the
+    // random landscape we want to normalise for:
+    //  a) The number of random games
+    //  b) The original fitness
+    // We also want to invert the score (since lower numbers were better).
+
+    (*it)->GetBlockSelector().SetFitness(
+        std::max(0.0, 2.0 - double((*it)->GetBlockSelector().Fitness()) /
+            (FLAGS_games * (*it)->GetPlayer().Fitness())) * 1000);
+
+    delete (*it);
   }
 }
 
