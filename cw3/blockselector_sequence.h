@@ -16,7 +16,7 @@ DECLARE_double(smrate);
 
 namespace BlockSelector {
 
-  template <int N = 200000>
+  template <int N = 1000000>
   class Sequence : public IndividualBase {
    public:
     Sequence();
