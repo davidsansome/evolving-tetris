@@ -37,6 +37,8 @@ CONFIG(debug, debug|release) {
         t
 }
 
+# DEFINES += NO_QT_STUFF
+
 # google-perftools
 # LIBS += -lprofiler
 # CONFIG(release):QMAKE_CXXFLAGS += -g

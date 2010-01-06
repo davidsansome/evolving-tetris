@@ -8,6 +8,10 @@
 #include <math.h>
 #include <cstdint>
 
+#ifndef NO_QT_STUFF
+# include <QtDebug>
+#endif
+
 template <typename PlayerType, typename SelectorType, typename BoardType>
 class Game {
  public:
@@ -16,6 +20,8 @@ class Game {
   PlayerType& GetPlayer() const { return player_; }
   SelectorType& GetBlockSelector() const { return block_selector_; }
   const BoardType& GetBoard() const { return board_; }
+
+  void SetWatchDelay(int watch_delay) { watch_delay_ = watch_delay; }
 
   // Plays a game of tetris, finishing when there's no room for any more blocks
   void Play();
@@ -33,6 +39,7 @@ class Game {
   Tetramino next_tetramino_;
 
   uint64_t blocks_placed_;
+  int watch_delay_;
 };
 
 
@@ -41,7 +48,8 @@ Game<PlayerType, SelectorType, BoardType>::Game(PlayerType& player,
                                                 SelectorType& block_selector)
     : player_(player),
       block_selector_(block_selector),
-      blocks_placed_(0)
+      blocks_placed_(0),
+      watch_delay_(-1)
 {
   board_.Clear();
 }
@@ -56,6 +64,13 @@ void Game<PlayerType, SelectorType, BoardType>::Play() {
   blocks_placed_ = 0;
   while (Step()) {
     blocks_placed_ ++;
+
+#ifndef NO_QT_STUFF
+    if (watch_delay_ != -1) {
+      qDebug() << board_;
+      usleep(watch_delay_ * 1000);
+    }
+#endif
   }
 }
 

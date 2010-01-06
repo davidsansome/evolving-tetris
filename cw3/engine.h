@@ -19,6 +19,11 @@ DEFINE_int32(pop, 128, "number of individuals in the population");
 DEFINE_int32(generations, 30, "number of generations to run for");
 DEFINE_int32(games, 32, "number of random games to compare each block selector against");
 DEFINE_int32(threads, QThread::idealThreadCount(), "number of threads to use");
+
+DEFINE_bool(dumpseq, false, "dump the best tetramino sequence after each generation");
+DEFINE_bool(watchseq, false, "watch the best tetramino sequence after each generation");
+DEFINE_int32(watchseqdelay, 10, "delay between each move in milliseconds");
+
 DECLARE_double(smrate);
 DECLARE_double(pmrate);
 DECLARE_double(pwmstddev);
@@ -260,6 +265,33 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
         std::max(0.0, 2.0 - double(selector.Fitness()) /
             (FLAGS_games * player_pop_[i].Fitness())) * 1000);
   }
+
+  if (FLAGS_dumpseq || FLAGS_watchseq) {
+    // Hack:
+    int best_index = -1;
+    uint64_t best_fitness = 0;
+    for (int i = 0 ; i < FLAGS_pop ; ++i) {
+      if (player_pop_[i].Fitness() > best_fitness) {
+        best_fitness = player_pop_[i].Fitness();
+        best_index = i;
+      }
+    }
+
+    if (FLAGS_watchseq) {
+      GameType game(player_pop_[best_index], selector_pop_[best_index]);
+      game.SetWatchDelay(FLAGS_watchseqdelay);
+      game.Play();
+      std::cerr << game.BlocksPlaced() << "," << best_fitness << std::endl;
+    }
+    if (FLAGS_dumpseq) {
+      auto seq = selector_pop_[best_index].GetSequence();
+      for (uint64_t i=0 ; i<best_fitness ; ++i) {
+        std::cerr << int(seq[i]);
+      }
+      std::cerr << std::endl;
+    }
+  }
+
 }
 
 #endif // ENGINE_H

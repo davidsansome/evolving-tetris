@@ -9,6 +9,10 @@
 #include <tr1/array>
 #include <cassert>
 
+#ifndef NO_QT_STUFF
+# include <QtDebug>
+#endif
+
 // Fields need to be in the same order as Individual::Criteria
 struct BoardStats {
   const int* begin() const { return &pile_height; }
@@ -341,7 +345,9 @@ void TetrisBoard<W,H>::ToMessage(Messages::BoardType* message) {
 
     dirty_ = false;
   }
+#endif
 
+#ifndef NO_QT_STUFF
   template <int W, int H>
   QDebug operator<<(QDebug s, const TetrisBoard<W,H>& b) {
     s.nospace() << "TetrisBoard(" << b.kWidth << "x" << b.kHeight << ")\n";
