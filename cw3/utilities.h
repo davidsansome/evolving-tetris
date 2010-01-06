@@ -16,12 +16,22 @@ class Int2 {
   int width() const { return x_; }
   int height() const { return y_; }
 
+  bool operator == (const Int2& other) const { return x_ == other.x_ && y_ == other.y_; }
+
  private:
   int x_;
   int y_;
 };
 
 namespace Utilities {
+
+  unsigned int RandomSeed();
+
+  inline int FastRand() {
+    static unsigned int seed = RandomSeed();
+    return rand_r(&seed);
+  }
+
   template <typename Container>
   typename Container::value_type Sum(typename Container::const_iterator begin,
                                      typename Container::const_iterator end) {
@@ -62,7 +72,7 @@ namespace Utilities {
     RangeGenerator(T min, T max) : min_(min), range_(max-min) {}
 
     T operator()() const {
-      return min_ + T((double(rand()) / RAND_MAX) * range_);
+      return min_ + T((double(Utilities::FastRand()) / RAND_MAX) * range_);
     }
 
    private:
@@ -81,7 +91,7 @@ namespace Utilities {
         : p_(p), original_it_(original_it), gen_(gen) {}
 
     value_type operator()() {
-      double r = double(rand()) / RAND_MAX;
+      double r = double(Utilities::FastRand()) / RAND_MAX;
       if (r < p_)
         return double(*(original_it_++)) * (*gen_)();
       else
@@ -104,7 +114,7 @@ namespace Utilities {
         : p_(p), original_it_(original_it), gen_(gen) {}
 
     value_type operator()() {
-      double r = double(rand()) / RAND_MAX;
+      double r = double(Utilities::FastRand()) / RAND_MAX;
       value_type ret = *(original_it_++);
       if (r < p_)
         return (*gen_)();
@@ -126,7 +136,7 @@ namespace Utilities {
       : a_(a), b_(b) {}
 
     value_type operator()() {
-      value_type ret = (rand() % 2) ? *a_ : *b_;
+      value_type ret = (Utilities::FastRand() % 2) ? *a_ : *b_;
 
       ++ a_; ++ b_;
       return ret;
@@ -136,8 +146,6 @@ namespace Utilities {
     iterator_type a_;
     iterator_type b_;
   };
-
-  unsigned int RandomSeed();
 }
 
 #endif // UTILITIES_H

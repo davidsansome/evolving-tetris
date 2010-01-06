@@ -46,7 +46,7 @@ int main(int argc, char** argv) {
   google::ParseCommandLineFlags(&argc, &argv, true);
 
 #ifndef QT_NO_DEBUG
-  if (argc >= 2 && argsv[1] == "t") {
+  if (argc >= 2 && strcmp(argv[1], "t") == 0) {
     RunTest<Test::Board>();
     RunTest<Test::Tetramino>();
 

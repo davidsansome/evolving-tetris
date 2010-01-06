@@ -120,7 +120,7 @@ IndividualType& Population<IndividualType>::SelectFitnessProportionate(const Ind
     total_fitness += it->Fitness();
   }
 
-  uint64_t selection = double(rand()) / RAND_MAX * total_fitness;
+  uint64_t selection = double(Utilities::FastRand()) / RAND_MAX * total_fitness;
   for (uint i=0 ; i<individuals_.size() ; ++i) {
     IndividualType& individual = individuals_[i];
     if (individual == excluding)

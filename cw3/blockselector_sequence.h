@@ -47,29 +47,13 @@ namespace BlockSelector {
    private:
     SequenceType sequence_;
     uint64_t next_index_;
-
-    typedef boost::variate_generator<
-        boost::mt19937, boost::uniform_smallint<> > RandomGenType;
-    static boost::mt19937 sRandomEngine;
-    static RandomGenType* sRandomGen;
   };
-
-
-  template <int N>
-  boost::mt19937 Sequence<N>::sRandomEngine;
-  template <int N>
-  typename Sequence<N>::RandomGenType* Sequence<N>::sRandomGen = NULL;
 
 
   template <int N>
   Sequence<N>::Sequence()
     : next_index_(0)
   {
-    if (sRandomGen == NULL) {
-      sRandomGen = new RandomGenType(
-          sRandomEngine, Tetramino::kTypeRange);
-      sRandomEngine.seed(Utilities::RandomSeed());
-    }
   }
 
   template <int N>
@@ -88,9 +72,10 @@ namespace BlockSelector {
 
   template <int N>
   void Sequence<N>::MutateFrom(const Sequence &parent) {
+    Utilities::RangeGenerator<GeneType> range_gen(0, Tetramino::kTypeCount-1);
     std::generate(sequence_.begin(), sequence_.end(),
-        Utilities::MutateReplaceGenerator<SequenceIteratorType, RandomGenType>(
-            FLAGS_smrate, sRandomGen, parent.sequence_.begin()));
+        Utilities::MutateReplaceGenerator<SequenceIteratorType, Utilities::RangeGenerator<GeneType> >(
+            FLAGS_smrate, &range_gen, parent.sequence_.begin()));
   }
 
   template <int N>

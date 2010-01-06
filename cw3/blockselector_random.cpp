@@ -21,7 +21,7 @@ int Random::operator ()() {
 }
 
 void Random::InitRandom() {
-  SetSeed(rand());
+  SetSeed(Utilities::FastRand());
 }
 
 } // namespace BlockSelector

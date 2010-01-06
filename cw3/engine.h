@@ -192,6 +192,7 @@ template <typename PlayerType, typename BoardType>
 void Engine<PlayerType, BoardType>::UpdateFitness() {
   // Create games
   std::vector<Messages::GameRequest> requests;
+  requests.reserve(FLAGS_pop);
 
   for (int i = 0 ; i < FLAGS_pop ; ++i) {
     Messages::GameRequest req;
@@ -216,6 +217,7 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
   // Update the fitness for each player
   // And prepare more games for each player against random sequences
   requests.clear();
+  requests.reserve(FLAGS_pop * FLAGS_games);
 
   for (auto it = responses.begin() ; it != responses.end() ; ++it) {
     const Messages::GameResponse& resp = *it;
