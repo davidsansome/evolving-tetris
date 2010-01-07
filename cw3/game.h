@@ -72,7 +72,7 @@ void Game<PlayerType, SelectorType, BoardType>::Play() {
     }
 #endif
 
-    if (SelectorType::kSize != 0 && blocks_placed_ > SelectorType::kSize)
+    if (blocks_placed_ >= 1000000)
       break;
   }
 }

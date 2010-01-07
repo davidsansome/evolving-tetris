@@ -13,8 +13,6 @@ namespace BlockSelector {
    public:
     Random();
 
-    static const uint64_t kSize = 0;
-
     // BlockSelector
     void Reset();
     int operator()();
