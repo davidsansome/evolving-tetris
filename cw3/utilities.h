@@ -3,7 +3,6 @@
 
 #include <cstdlib>
 
-#include <boost/type_traits/remove_pointer.hpp>
 #include <boost/random/lagged_fibonacci.hpp>
 #include <boost/random/variate_generator.hpp>
 
@@ -85,11 +84,11 @@ namespace Utilities {
   }
 
   // Mutates values with probability p by multiplying it by a random number
-  // taken from gen
+  // taken from the given distribution
   template <typename iterator_type, typename distribution_type>
   class _MutateGenerator {
    public:
-    typedef typename boost::remove_pointer<iterator_type>::type value_type;
+    typedef typename std::iterator_traits<iterator_type>::value_type value_type;
 
     _MutateGenerator(double p, distribution_type& dist, iterator_type original_it)
         : p_(p), original_it_(original_it), dist_(dist) {}
@@ -117,13 +116,13 @@ namespace Utilities {
   template <typename iterator_type, typename replace_gen_type>
   class _MutateReplaceGenerator {
    public:
-    typedef typename boost::remove_pointer<iterator_type>::type value_type;
+    typedef typename std::iterator_traits<iterator_type>::value_type value_type;
 
     _MutateReplaceGenerator(double p, replace_gen_type& gen, iterator_type original_it)
         : p_(p), original_it_(original_it), gen_(gen) {}
 
     value_type operator()() {
-      double r = Utilities::global_rng() / RAND_MAX;
+      double r = Utilities::global_rng();
       value_type ret = *(original_it_++);
       if (r < p_)
         return gen_();
@@ -141,12 +140,13 @@ namespace Utilities {
     return _MutateReplaceGenerator<iterator_type, replace_gen_type>(p, gen, original_it);
   }
 
+  // Uniform crossover with two parents
   template <typename iterator_type>
-  class _CrossoverGenerator {
+  class _UniformCrossoverGenerator {
    public:
-    typedef typename boost::remove_pointer<iterator_type>::type value_type;
+    typedef typename std::iterator_traits<iterator_type>::value_type value_type;
 
-    _CrossoverGenerator(iterator_type a, iterator_type b)
+    _UniformCrossoverGenerator(iterator_type a, iterator_type b)
       : a_(a), b_(b) {}
 
     value_type operator()() {
@@ -162,8 +162,38 @@ namespace Utilities {
   };
 
   template <typename iterator_type>
-  _CrossoverGenerator<iterator_type> CrossoverGenerator(iterator_type a, iterator_type b) {
-    return _CrossoverGenerator<iterator_type>(a,b);
+  _UniformCrossoverGenerator<iterator_type> UniformCrossoverGenerator(iterator_type a, iterator_type b) {
+    return _UniformCrossoverGenerator<iterator_type>(a,b);
+  }
+
+  // One point crossover with two parents
+  template <typename iterator_type>
+  class _OnePointCrossoverGenerator {
+   public:
+    typedef typename std::iterator_traits<iterator_type>::value_type value_type;
+
+    _OnePointCrossoverGenerator(iterator_type a, iterator_type b, size_t size)
+      : a_(a), b_(b), i_(0) {
+      crossover_point_ = Utilities::global_rng() * (size+1);
+    }
+
+    value_type operator()() {
+      value_type ret = (i_++ > crossover_point_) ? *b_ : *a_;
+
+      ++ a_; ++ b_;
+      return ret;
+    }
+
+   private:
+    iterator_type a_;
+    iterator_type b_;
+    size_t i_;
+    size_t crossover_point_;
+  };
+
+  template <typename iterator_type>
+  _OnePointCrossoverGenerator<iterator_type> OnePointCrossoverGenerator(iterator_type a, iterator_type b, size_t size) {
+    return _OnePointCrossoverGenerator<iterator_type>(a,b,size);
   }
 }
 

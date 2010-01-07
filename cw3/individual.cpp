@@ -73,23 +73,23 @@ void Individual<RatingAlgorithm_ExponentialWithDisplacement>::MutateFrom(const I
 
 template <>
 void Individual<RatingAlgorithm_Linear>::Crossover(const Individual& one, const Individual& two) {
-  std::generate(weights_.begin(), weights_.end(), Utilities::CrossoverGenerator(
+  std::generate(weights_.begin(), weights_.end(), Utilities::UniformCrossoverGenerator(
                 one.weights_.begin(), two.weights_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_Exponential>::Crossover(const Individual& one, const Individual& two) {
-  std::generate(weights_.begin(), weights_.end(), Utilities::CrossoverGenerator(
+  std::generate(weights_.begin(), weights_.end(), Utilities::UniformCrossoverGenerator(
                 one.weights_.begin(), two.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(), Utilities::CrossoverGenerator(
+  std::generate(exponents_.begin(), exponents_.end(), Utilities::UniformCrossoverGenerator(
                 one.exponents_.begin(), two.exponents_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_ExponentialWithDisplacement>::Crossover(const Individual& one, const Individual& two) {
-  std::generate(weights_.begin(), weights_.end(), Utilities::CrossoverGenerator(
+  std::generate(weights_.begin(), weights_.end(), Utilities::UniformCrossoverGenerator(
                 one.weights_.begin(), two.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(), Utilities::CrossoverGenerator(
+  std::generate(exponents_.begin(), exponents_.end(), Utilities::UniformCrossoverGenerator(
                 one.exponents_.begin(), two.exponents_.begin()));
-  std::generate(displacements_.begin(), displacements_.end(), Utilities::CrossoverGenerator(
+  std::generate(displacements_.begin(), displacements_.end(), Utilities::UniformCrossoverGenerator(
                 one.displacements_.begin(), two.displacements_.begin()));
 }
 

@@ -10,6 +10,7 @@ DEFINE_string(size, "6x12", "board size");
 # include <QStringList>
 # include "test_board.h"
 # include "test_tetramino.h"
+# include "test_generators.h"
 
   template <typename T>
   void RunTest(const QStringList& args = QStringList()) {
@@ -49,6 +50,7 @@ int main(int argc, char** argv) {
   if (argc >= 2 && strcmp(argv[1], "t") == 0) {
     RunTest<Test::Board>();
     RunTest<Test::Tetramino>();
+    RunTest<Test::Generators>();
 
     return 0;
   }

@@ -30,9 +30,11 @@ CONFIG(debug, debug|release) {
     # Testing
     QT += testlib
     SOURCES += test_board.cpp \
-        test_tetramino.cpp
+        test_tetramino.cpp \
+        test_generators.cpp
     HEADERS += test_board.h \
-        test_tetramino.h
+        test_tetramino.h \
+        test_generators.h
     QMAKE_POST_LINK = ./cw3 \
         t
 }

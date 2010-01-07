@@ -13,6 +13,7 @@
 #include "messages.pb.h"
 
 DECLARE_double(smrate);
+DECLARE_bool(sonepoint);
 
 namespace BlockSelector {
 
@@ -84,9 +85,15 @@ namespace BlockSelector {
 
   template <int N>
   void Sequence<N>::Crossover(const Sequence &one, const Sequence &two) {
-    std::generate(sequence_.begin(), sequence_.end(),
-        Utilities::CrossoverGenerator<SequenceIteratorType>(
-            one.sequence_.begin(), two.sequence_.begin()));
+    if (FLAGS_sonepoint) {
+      std::generate(sequence_.begin(), sequence_.end(),
+          Utilities::OnePointCrossoverGenerator(
+              one.sequence_.begin(), two.sequence_.begin(), N));
+    } else {
+      std::generate(sequence_.begin(), sequence_.end(),
+          Utilities::UniformCrossoverGenerator(
+              one.sequence_.begin(), two.sequence_.begin()));
+    }
   }
 
   template <int N>
