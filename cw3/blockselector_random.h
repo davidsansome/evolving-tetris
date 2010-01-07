@@ -22,7 +22,8 @@ namespace BlockSelector {
     // Individual
     void InitRandom();
 
-    void FromMessage(const Messages::GameRequest&) {}
+    void ToMessage(Messages::BlockSelectorRandom* message);
+    void FromMessage(const Messages::GameRequest& req);
 
    private:
     unsigned int original_seed_;
