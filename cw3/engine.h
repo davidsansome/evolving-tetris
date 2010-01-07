@@ -264,8 +264,8 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
     SelectorType& selector = selector_pop_[i];
 
     selector.SetFitness(
-        std::max(0.0, 2.0 - double(selector.Fitness()) /
-            (FLAGS_games * player_pop_[i].Fitness())) * 1000);
+        std::pow(std::max(0.0, 2.0 - double(selector.Fitness()) /
+            (FLAGS_games * player_pop_[i].Fitness())), 2) * 1000);
   }
 
   if (FLAGS_dumpseq || FLAGS_watchseq) {
