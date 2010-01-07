@@ -2,6 +2,7 @@
 #define BLOCKSELECTOR_RANDOM_H
 
 #include <tr1/array>
+#include <boost/random/lagged_fibonacci.hpp>
 
 #include "individualbase.h"
 #include "messages.pb.h"
@@ -12,8 +13,7 @@ namespace BlockSelector {
    public:
     Random();
 
-    void SetSeed(unsigned int seed);
-    unsigned int GetSeed() const { return original_seed_; }
+    static const uint64_t kSize = 0;
 
     // BlockSelector
     void Reset();
@@ -26,8 +26,8 @@ namespace BlockSelector {
     void FromMessage(const Messages::GameRequest& req);
 
    private:
-    unsigned int original_seed_;
-    unsigned int seed_;
+    uint32_t seed_;
+    boost::lagged_fibonacci607 rng_;
   };
 
 } // namespace BlockSelector

@@ -4,6 +4,8 @@
 #include <cstdlib>
 
 #include <boost/type_traits/remove_pointer.hpp>
+#include <boost/random/lagged_fibonacci.hpp>
+#include <boost/random/variate_generator.hpp>
 
 // Source-compatibility with QPoint and QSize
 class Int2 {
@@ -27,10 +29,7 @@ namespace Utilities {
 
   unsigned int RandomSeed();
 
-  inline int FastRand() {
-    static unsigned int seed = RandomSeed();
-    return rand_r(&seed);
-  }
+  static boost::lagged_fibonacci607 global_rng;
 
   template <typename Container>
   typename Container::value_type Sum(typename Container::const_iterator begin,
@@ -67,12 +66,12 @@ namespace Utilities {
 
   // Generates random numbers from a range.
   template <typename T>
-  class RangeGenerator {
+  class _RangeGenerator {
    public:
-    RangeGenerator(T min, T max) : min_(min), range_(max-min) {}
+    _RangeGenerator(T min, T max) : min_(min), range_(max-min) {}
 
     T operator()() const {
-      return min_ + T((double(Utilities::FastRand()) / RAND_MAX) * range_);
+      return min_ + T(Utilities::global_rng() * (range_+1));
     }
 
    private:
@@ -80,20 +79,25 @@ namespace Utilities {
     T range_;
   };
 
+  template <typename T>
+  _RangeGenerator<T> RangeGenerator(T min, T max) {
+    return _RangeGenerator<T>(min, max);
+  }
+
   // Mutates values with probability p by multiplying it by a random number
   // taken from gen
-  template <typename iterator_type, typename random_gen_type>
-  class MutateGenerator {
+  template <typename iterator_type, typename distribution_type>
+  class _MutateGenerator {
    public:
     typedef typename boost::remove_pointer<iterator_type>::type value_type;
 
-    MutateGenerator(double p, random_gen_type* gen, iterator_type original_it)
-        : p_(p), original_it_(original_it), gen_(gen) {}
+    _MutateGenerator(double p, distribution_type& dist, iterator_type original_it)
+        : p_(p), original_it_(original_it), dist_(dist) {}
 
     value_type operator()() {
-      double r = double(Utilities::FastRand()) / RAND_MAX;
+      double r = Utilities::global_rng();
       if (r < p_)
-        return double(*(original_it_++)) * (*gen_)();
+        return double(*(original_it_++)) * dist_(Utilities::global_rng);
       else
         return *(original_it_++);
     }
@@ -101,42 +105,52 @@ namespace Utilities {
    private:
     double p_;
     iterator_type original_it_;
-    random_gen_type* gen_;
+    distribution_type& dist_;
   };
+
+  template <typename iterator_type, typename distribution_type>
+  _MutateGenerator<iterator_type, distribution_type> MutateGenerator(double p, distribution_type& dist, iterator_type original_it) {
+    return _MutateGenerator<iterator_type, distribution_type>(p, dist, original_it);
+  }
 
   // Mutates values with probablity p by replacing with a number from gen
   template <typename iterator_type, typename replace_gen_type>
-  class MutateReplaceGenerator {
+  class _MutateReplaceGenerator {
    public:
     typedef typename boost::remove_pointer<iterator_type>::type value_type;
 
-    MutateReplaceGenerator(double p, replace_gen_type* gen, iterator_type original_it)
+    _MutateReplaceGenerator(double p, replace_gen_type& gen, iterator_type original_it)
         : p_(p), original_it_(original_it), gen_(gen) {}
 
     value_type operator()() {
-      double r = double(Utilities::FastRand()) / RAND_MAX;
+      double r = Utilities::global_rng() / RAND_MAX;
       value_type ret = *(original_it_++);
       if (r < p_)
-        return (*gen_)();
+        return gen_();
       return ret;
     }
 
    private:
     double p_;
     iterator_type original_it_;
-    replace_gen_type* gen_;
+    replace_gen_type& gen_;
   };
 
+  template <typename iterator_type, typename replace_gen_type>
+  _MutateReplaceGenerator<iterator_type, replace_gen_type> MutateReplaceGenerator(double p, replace_gen_type& gen, iterator_type original_it) {
+    return _MutateReplaceGenerator<iterator_type, replace_gen_type>(p, gen, original_it);
+  }
+
   template <typename iterator_type>
-  class CrossoverGenerator {
+  class _CrossoverGenerator {
    public:
     typedef typename boost::remove_pointer<iterator_type>::type value_type;
 
-    CrossoverGenerator(iterator_type a, iterator_type b)
+    _CrossoverGenerator(iterator_type a, iterator_type b)
       : a_(a), b_(b) {}
 
     value_type operator()() {
-      value_type ret = (Utilities::FastRand() % 2) ? *a_ : *b_;
+      value_type ret = (Utilities::global_rng() > 0.5) ? *a_ : *b_;
 
       ++ a_; ++ b_;
       return ret;
@@ -146,6 +160,11 @@ namespace Utilities {
     iterator_type a_;
     iterator_type b_;
   };
+
+  template <typename iterator_type>
+  _CrossoverGenerator<iterator_type> CrossoverGenerator(iterator_type a, iterator_type b) {
+    return _CrossoverGenerator<iterator_type>(a,b);
+  }
 }
 
 #endif // UTILITIES_H

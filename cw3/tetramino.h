@@ -3,7 +3,6 @@
 
 #include "utilities.h"
 
-#include <boost/random/uniform_smallint.hpp>
 #include <cassert>
 
 class Tetramino {
@@ -21,7 +20,7 @@ class Tetramino {
   static const int kTypeCount;
   static const int kBlockSize;
   static const int kPointsCount;
-  static boost::uniform_smallint<> kTypeRange;
+  static Utilities::_RangeGenerator<int> kTypeRange;
 
  private:
   Tetramino(const Tetramino&) {}

@@ -71,6 +71,9 @@ void Game<PlayerType, SelectorType, BoardType>::Play() {
       usleep(watch_delay_ * 1000);
     }
 #endif
+
+    if (SelectorType::kSize != 0 && blocks_placed_ > SelectorType::kSize*2)
+      break;
   }
 }
 

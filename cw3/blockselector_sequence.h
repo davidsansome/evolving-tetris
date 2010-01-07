@@ -21,6 +21,7 @@ namespace BlockSelector {
    public:
     Sequence();
 
+    static const uint64_t kSize = N;
     typedef uint8_t GeneType;
     typedef std::tr1::array<GeneType, N> SequenceType;
 
@@ -67,15 +68,13 @@ namespace BlockSelector {
   template <int N>
   void Sequence<N>::InitRandom() {
     std::generate(sequence_.begin(), sequence_.end(),
-        Utilities::RangeGenerator<GeneType>(0, Tetramino::kTypeCount-1));
+                  Tetramino::kTypeRange);
   }
 
   template <int N>
   void Sequence<N>::MutateFrom(const Sequence &parent) {
-    Utilities::RangeGenerator<GeneType> range_gen(0, Tetramino::kTypeCount-1);
-    std::generate(sequence_.begin(), sequence_.end(),
-        Utilities::MutateReplaceGenerator<SequenceIteratorType, Utilities::RangeGenerator<GeneType> >(
-            FLAGS_smrate, &range_gen, parent.sequence_.begin()));
+    std::generate(sequence_.begin(), sequence_.end(), Utilities::MutateReplaceGenerator(
+                  FLAGS_smrate, Tetramino::kTypeRange, parent.sequence_.begin()));
   }
 
   template <int N>

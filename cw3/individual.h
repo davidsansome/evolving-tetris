@@ -7,9 +7,7 @@
 #include <cstdlib>
 
 #include <boost/bind.hpp>
-#include <boost/random/variate_generator.hpp>
 #include <boost/random/normal_distribution.hpp>
-#include <boost/random/mersenne_twister.hpp>
 
 #include <google/gflags.h>
 
@@ -92,12 +90,10 @@ class Individual : public IndividualBase {
   RealGenes exponents_;
   RealGenes displacements_;
 
-  typedef boost::variate_generator<
-      boost::mt19937, boost::normal_distribution<double> > RandomGenType;
-  static boost::mt19937 sRandomEngine;
-  static RandomGenType* sWeightRandomGen;
-  static RandomGenType* sExponentRandomGen;
-  static RandomGenType* sDisplacementRandomGen;
+  typedef boost::normal_distribution<double> DistributionType;
+  static DistributionType sWeightDistribution;
+  static DistributionType sExponentDistribution;
+  static DistributionType sDisplacementDistribution;
 
   // The specialisations of this function use our weights, exponents and
   // displacements to find a rating for a BoardStats struct
@@ -113,27 +109,16 @@ class Individual : public IndividualBase {
 #endif // QT_NO_DEBUG
 
 template <RatingAlgorithm A>
-boost::mt19937 Individual<A>::sRandomEngine;
+typename Individual<A>::DistributionType Individual<A>::sWeightDistribution(1.0, FLAGS_pwmstddev);
 template <RatingAlgorithm A>
-typename Individual<A>::RandomGenType* Individual<A>::sWeightRandomGen = NULL;
+typename Individual<A>::DistributionType Individual<A>::sExponentDistribution(1.0, FLAGS_pemstddev);
 template <RatingAlgorithm A>
-typename Individual<A>::RandomGenType* Individual<A>::sExponentRandomGen = NULL;
-template <RatingAlgorithm A>
-typename Individual<A>::RandomGenType* Individual<A>::sDisplacementRandomGen = NULL;
+typename Individual<A>::DistributionType Individual<A>::sDisplacementDistribution(1.0, FLAGS_pdmstddev);
 
 
 template <RatingAlgorithm A>
 Individual<A>::Individual()
 {
-  if (!sWeightRandomGen) {
-    sWeightRandomGen = new RandomGenType(
-        sRandomEngine, boost::normal_distribution<double>(1.0, FLAGS_pwmstddev));
-    sExponentRandomGen = new RandomGenType(
-        sRandomEngine, boost::normal_distribution<double>(1.0, FLAGS_pemstddev));
-    sDisplacementRandomGen = new RandomGenType(
-        sRandomEngine, boost::normal_distribution<double>(1.0, FLAGS_pdmstddev));
-    sRandomEngine.seed(Utilities::RandomSeed());
-  }
 }
 
 template <RatingAlgorithm A>

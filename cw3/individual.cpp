@@ -28,81 +28,69 @@ void Individual<RatingAlgorithm_ExponentialWithDisplacement>::CopyFrom(const Ind
 template <>
 void Individual<RatingAlgorithm_Linear>::InitRandom() {
   std::generate(weights_.begin(), weights_.end(),
-                Utilities::RangeGenerator<int>(-1000, 1000));
+                Utilities::RangeGenerator(-1000, 1000));
 }
 template <>
 void Individual<RatingAlgorithm_Exponential>::InitRandom() {
   std::generate(weights_.begin(), weights_.end(),
-                Utilities::RangeGenerator<int>(-1000, 1000));
+                Utilities::RangeGenerator(-1000, 1000));
   std::generate(exponents_.begin(), exponents_.end(),
-                Utilities::RangeGenerator<double>(-2.0, 2.0));
+                Utilities::RangeGenerator(-2.0, 2.0));
 }
 template <>
 void Individual<RatingAlgorithm_ExponentialWithDisplacement>::InitRandom() {
   std::generate(weights_.begin(), weights_.end(),
-                Utilities::RangeGenerator<int>(-1000, 1000));
+                Utilities::RangeGenerator(-1000, 1000));
   std::generate(exponents_.begin(), exponents_.end(),
-                Utilities::RangeGenerator<double>(-2.0, 2.0));
+                Utilities::RangeGenerator(-2.0, 2.0));
   std::generate(displacements_.begin(), displacements_.end(),
-                Utilities::RangeGenerator<double>(-10.0, 10.0));
+                Utilities::RangeGenerator(-10.0, 10.0));
 }
 
 
 template <>
 void Individual<RatingAlgorithm_Linear>::MutateFrom(const Individual& parent) {
-  std::generate(weights_.begin(), weights_.end(),
-      Utilities::MutateGenerator<IntegerGenes::const_iterator, RandomGenType>(
-          FLAGS_pmrate, sWeightRandomGen, parent.weights_.begin()));
+  std::generate(weights_.begin(), weights_.end(), Utilities::MutateGenerator(
+               FLAGS_pmrate, sWeightDistribution, parent.weights_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_Exponential>::MutateFrom(const Individual& parent) {
-  std::generate(weights_.begin(), weights_.end(),
-      Utilities::MutateGenerator<IntegerGenes::const_iterator, RandomGenType>(
-          FLAGS_pmrate, sWeightRandomGen, parent.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(),
-      Utilities::MutateGenerator<RealGenes::const_iterator, RandomGenType>(
-          FLAGS_pmrate, sExponentRandomGen, parent.exponents_.begin()));
+  std::generate(weights_.begin(), weights_.end(), Utilities::MutateGenerator(
+                FLAGS_pmrate, sWeightDistribution, parent.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), Utilities::MutateGenerator(
+                FLAGS_pmrate, sExponentDistribution, parent.exponents_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_ExponentialWithDisplacement>::MutateFrom(const Individual& parent) {
-  std::generate(weights_.begin(), weights_.end(),
-      Utilities::MutateGenerator<IntegerGenes::const_iterator, RandomGenType>(
-          FLAGS_pmrate, sWeightRandomGen, parent.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(),
-      Utilities::MutateGenerator<RealGenes::const_iterator, RandomGenType>(
-          FLAGS_pmrate, sExponentRandomGen, parent.exponents_.begin()));
-  std::generate(displacements_.begin(), displacements_.end(),
-      Utilities::MutateGenerator<RealGenes::const_iterator, RandomGenType>(
-          FLAGS_pmrate, sDisplacementRandomGen, parent.displacements_.begin()));
+  std::generate(weights_.begin(), weights_.end(), Utilities::MutateGenerator(
+                FLAGS_pmrate, sWeightDistribution, parent.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), Utilities::MutateGenerator(
+                FLAGS_pmrate, sExponentDistribution, parent.exponents_.begin()));
+  std::generate(displacements_.begin(), displacements_.end(), Utilities::MutateGenerator(
+                FLAGS_pmrate, sDisplacementDistribution, parent.displacements_.begin()));
 }
 
 
 template <>
 void Individual<RatingAlgorithm_Linear>::Crossover(const Individual& one, const Individual& two) {
-  std::generate(weights_.begin(), weights_.end(),
-      Utilities::CrossoverGenerator<IntegerGenes::const_iterator>(
-          one.weights_.begin(), two.weights_.begin()));
+  std::generate(weights_.begin(), weights_.end(), Utilities::CrossoverGenerator(
+                one.weights_.begin(), two.weights_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_Exponential>::Crossover(const Individual& one, const Individual& two) {
-  std::generate(weights_.begin(), weights_.end(),
-      Utilities::CrossoverGenerator<IntegerGenes::const_iterator>(
-          one.weights_.begin(), two.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(),
-      Utilities::CrossoverGenerator<RealGenes::const_iterator>(
-          one.exponents_.begin(), two.exponents_.begin()));
+  std::generate(weights_.begin(), weights_.end(), Utilities::CrossoverGenerator(
+                one.weights_.begin(), two.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), Utilities::CrossoverGenerator(
+                one.exponents_.begin(), two.exponents_.begin()));
 }
 template <>
 void Individual<RatingAlgorithm_ExponentialWithDisplacement>::Crossover(const Individual& one, const Individual& two) {
-  std::generate(weights_.begin(), weights_.end(),
-      Utilities::CrossoverGenerator<IntegerGenes::const_iterator>(
-          one.weights_.begin(), two.weights_.begin()));
-  std::generate(exponents_.begin(), exponents_.end(),
-      Utilities::CrossoverGenerator<RealGenes::const_iterator>(
-          one.exponents_.begin(), two.exponents_.begin()));
-  std::generate(displacements_.begin(), displacements_.end(),
-      Utilities::CrossoverGenerator<RealGenes::const_iterator>(
-          one.displacements_.begin(), two.displacements_.begin()));
+  std::generate(weights_.begin(), weights_.end(), Utilities::CrossoverGenerator(
+                one.weights_.begin(), two.weights_.begin()));
+  std::generate(exponents_.begin(), exponents_.end(), Utilities::CrossoverGenerator(
+                one.exponents_.begin(), two.exponents_.begin()));
+  std::generate(displacements_.begin(), displacements_.end(), Utilities::CrossoverGenerator(
+                one.displacements_.begin(), two.displacements_.begin()));
 }
 
 

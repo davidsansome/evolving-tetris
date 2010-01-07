@@ -6,31 +6,26 @@ namespace BlockSelector {
 Random::Random() {
 }
 
-void Random::SetSeed(unsigned int seed) {
-  original_seed_ = seed;
-
-  Reset();
-}
-
 void Random::Reset() {
-  seed_ = original_seed_;
+  rng_.seed(seed_);
 }
 
 int Random::operator ()() {
-  return rand_r(&seed_) % Tetramino::kTypeCount;
+  return Tetramino::kTypeRange();
 }
 
 void Random::InitRandom() {
-  SetSeed(Utilities::FastRand());
+  seed_ = Utilities::global_rng() * std::numeric_limits<uint32_t>::max();
+  rng_.seed(seed_);
 }
 
 void Random::ToMessage(Messages::BlockSelectorRandom* message) {
-  message->set_seed(original_seed_);
+  message->set_seed(seed_);
 }
 
 void Random::FromMessage(const Messages::GameRequest& req) {
-  original_seed_ = req.selector_random().seed();
-  Reset();
+  seed_ = req.selector_random().seed();
+  rng_.seed(seed_);
 }
 
 } // namespace BlockSelector

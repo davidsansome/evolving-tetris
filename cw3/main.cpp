@@ -54,8 +54,7 @@ int main(int argc, char** argv) {
   }
 #endif
 
-  // Seed random number generator
-  srand(Utilities::RandomSeed());
+  Utilities::global_rng.seed(Utilities::RandomSeed());
 
   if      (FLAGS_size == "5x10") Run<5,10>();
   else if (FLAGS_size == "6x12") Run<6,12>();
