@@ -3,8 +3,6 @@
 
 #include <tr1/array>
 
-#include <boost/random/mersenne_twister.hpp>
-
 #include "individualbase.h"
 #include "messages.pb.h"
 
@@ -14,11 +12,8 @@ namespace BlockSelector {
    public:
     Random();
 
-    typedef uint32_t SeedType;
-    typedef std::tr1::array<SeedType, 1> GeneType;
-
-    void SetSeed(SeedType seed);
-    SeedType GetSeed() const { return seed_[0]; }
+    void SetSeed(unsigned int seed);
+    unsigned int GetSeed() const { return original_seed_; }
 
     // BlockSelector
     void Reset();
@@ -26,19 +21,12 @@ namespace BlockSelector {
 
     // Individual
     void InitRandom();
-    /*void MutateFrom(const Random& parent);
-    void CopyFrom(const Random& other);
-    void Crossover(const Random& one, const Random& two);
-    void Mutate();*/
-
-    const GeneType& Gene() const { return seed_; }
 
     void FromMessage(const Messages::GameRequest&) {}
 
    private:
-    GeneType seed_;
-
-    boost::mt19937 random_engine_;
+    unsigned int original_seed_;
+    unsigned int seed_;
   };
 
 } // namespace BlockSelector

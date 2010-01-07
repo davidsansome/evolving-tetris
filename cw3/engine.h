@@ -84,7 +84,9 @@ const PlayerType& Engine<PlayerType, BoardType>::FittestOf(
 template <typename PlayerType, typename BoardType>
 void Engine<PlayerType, BoardType>::Run() {
   player_pop_.InitRandom();
-  selector_pop_.InitRandom();
+
+  if (FLAGS_games)
+    selector_pop_.InitRandom();
 
   using std::cout;
   using std::endl;
@@ -130,12 +132,11 @@ void Engine<PlayerType, BoardType>::Run() {
       cout << "d" << i << "\t";
 
   cout << "Time\t"
-       << "sd-w\t";
+       << "sd-w";
   if (PlayerType::HasExponents())
-    cout << "sd-e\t";
+    cout << "\tsd-e";
   if (PlayerType::HasDisplacements())
-    cout << "sd-d\t";
-  cout << "sd-s";
+    cout << "\tsd-d";
   cout << endl;
 
   cout.precision(3);
@@ -173,18 +174,19 @@ void Engine<PlayerType, BoardType>::Run() {
         cout << player_pop_.Fittest().Displacements()[i] << "\t";
 
     cout << time_taken << "\t" <<
-        player_pop_.Diversity(boost::bind(&PlayerType::Weights, _1)) << "\t";
+        player_pop_.Diversity(boost::bind(&PlayerType::Weights, _1));
 
     if (PlayerType::HasExponents())
-      cout << player_pop_.Diversity(boost::bind(&PlayerType::Exponents, _1)) << "\t";
+      cout << "\t" << player_pop_.Diversity(boost::bind(&PlayerType::Exponents, _1));
     if (PlayerType::HasDisplacements())
-      cout << player_pop_.Diversity(boost::bind(&PlayerType::Displacements, _1)) << "\t";
-    cout << selector_pop_.Diversity(boost::bind(&SelectorType::GetSequence, _1));
+      cout << "\t" << player_pop_.Diversity(boost::bind(&PlayerType::Displacements, _1));
     cout << endl;
 
     // Make new populations
     player_pop_.NextGeneration();
-    selector_pop_.NextGeneration();
+
+    if (FLAGS_games)
+      selector_pop_.NextGeneration();
   }
 }
 
@@ -199,8 +201,12 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
     req.set_player_id(i);
     req.set_selector_id(i);
     player_pop_[i].ToMessage(req.mutable_player());
-    selector_pop_[i].ToMessage(req.mutable_selector_sequence());
     BoardType::ToMessage(req.mutable_board());
+
+    if (FLAGS_games)
+      selector_pop_[i].ToMessage(req.mutable_selector_sequence());
+    else
+      req.mutable_selector_random();
 
     requests.push_back(req);
   }
@@ -217,7 +223,9 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
   // Update the fitness for each player
   // And prepare more games for each player against random sequences
   requests.clear();
-  requests.reserve(FLAGS_pop * FLAGS_games);
+
+  if (FLAGS_games)
+    requests.reserve(FLAGS_pop * FLAGS_games);
 
   for (auto it = responses.begin() ; it != responses.end() ; ++it) {
     const Messages::GameResponse& resp = *it;
@@ -235,6 +243,9 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
       requests.push_back(req);
     }
   }
+
+  if (!FLAGS_games)
+    return;
 
   // Run these random games
   future = QtConcurrent::mapped(

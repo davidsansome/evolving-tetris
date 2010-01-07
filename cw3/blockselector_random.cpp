@@ -6,18 +6,18 @@ namespace BlockSelector {
 Random::Random() {
 }
 
-void Random::SetSeed(SeedType seed) {
-  seed_[0] = seed;
+void Random::SetSeed(unsigned int seed) {
+  original_seed_ = seed;
 
   Reset();
 }
 
 void Random::Reset() {
-  random_engine_.seed(boost::mt19937::result_type(seed_[0]));
+  seed_ = original_seed_;
 }
 
 int Random::operator ()() {
-  return Tetramino::kTypeRange(random_engine_);
+  return rand_r(&seed_) % Tetramino::kTypeCount;
 }
 
 void Random::InitRandom() {

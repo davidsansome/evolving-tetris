@@ -97,6 +97,8 @@ double Population<IndividualType>::Diversity(
   GeneType diversity = 0;
   for (int i=0 ; i<count ; ++i) {
     std::vector<GeneType> genes;
+    genes.reserve(individuals_.size());
+
     for (auto it = individuals_.begin() ; it != individuals_.end() ; ++it) {
       genes.push_back(accessor(&(*it))[i]);
     }
