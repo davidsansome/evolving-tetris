@@ -24,4 +24,13 @@ void Random::InitRandom() {
   SetSeed(Utilities::FastRand());
 }
 
+void Random::ToMessage(Messages::BlockSelectorRandom* message) {
+  message->set_seed(original_seed_);
+}
+
+void Random::FromMessage(const Messages::GameRequest& req) {
+  original_seed_ = req.selector_random().seed();
+  Reset();
+}
+
 } // namespace BlockSelector

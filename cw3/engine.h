@@ -205,8 +205,11 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
 
     if (FLAGS_games)
       selector_pop_[i].ToMessage(req.mutable_selector_sequence());
-    else
-      req.mutable_selector_random();
+    else {
+      BlockSelector::Random random;
+      random.InitRandom();
+      random.ToMessage(req.mutable_selector_random());
+    }
 
     requests.push_back(req);
   }
@@ -237,8 +240,11 @@ void Engine<PlayerType, BoardType>::UpdateFitness() {
       req.set_player_id(resp.player_id());
       req.set_selector_id(resp.selector_id());
       player_pop_[resp.player_id()].ToMessage(req.mutable_player());
-      req.mutable_selector_random();
       BoardType::ToMessage(req.mutable_board());
+
+      BlockSelector::Random random;
+      random.InitRandom();
+      random.ToMessage(req.mutable_selector_random());
 
       requests.push_back(req);
     }

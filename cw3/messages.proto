@@ -18,6 +18,7 @@ message Player {
 }
 
 message BlockSelectorRandom {
+  optional uint32 seed = 1;
 }
 
 message BlockSelectorSequence {
