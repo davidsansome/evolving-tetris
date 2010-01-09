@@ -1,0 +1,114 @@
+\documentclass[a4paper,11pt]{article}
+
+\usepackage[pdftex]{graphicx}
+\usepackage[pdftex,breaklinks=true,colorlinks=true,linkcolor=black,filecolor=blue,urlcolor=blue]{hyperref}
+\usepackage{color}
+\usepackage[paper=a4paper,hmargin=3cm,vmargin=4cm]{geometry}
+\usepackage{lscape}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{subfig}
+\usepackage{pdflscape}
+
+% Paragraph style
+\setlength\parindent{0in}
+\setlength\parskip{0.1in}
+
+% URL style
+\def\UrlFont{\small\tt}
+
+\lstset{breaklines=true,basicstyle=\small,tabsize=3,numbers=left,numberstyle=\tiny,numbersep=5pt,emptylines=1}
+
+% Setup fancy headings - copied from lshort
+\pagestyle{fancy}
+% with this we ensure that the chapter and section
+% headings are in lowercase.
+\renewcommand{\sectionmark}[1]{%
+        \markright{\thesection\ #1}}
+\fancyhf{} % delete current header and footer
+\fancyhead[LE,RO]{\bfseries\thepage}
+\fancyhead[LO]{\bfseries\rightmark}
+\fancyhead[RE]{\bfseries\leftmark}
+\renewcommand{\headrulewidth}{0.5pt}
+\renewcommand{\footrulewidth}{0pt}
+\addtolength{\headheight}{0.5pt} % space for the rule
+\fancypagestyle{plain}{%
+   \fancyhead{} % get rid of headers on plain pages
+   \renewcommand{\headrulewidth}{0pt} % and the line
+}
+
+%opening
+\title{COMP6026 Assignment 3 \\
+Coevolving an ideal Tetris trainer}
+\author{David Sansome $<$ds505$>$}
+
+\begin{document}
+\bibliographystyle{plain}
+
+\maketitle
+
+\begin{abstract}
+
+
+
+\end{abstract}
+
+\clearpage
+\tableofcontents
+
+\section{Technical Improvements}
+
+\subsection{Things from the original paper}
+
+Board rating criteria \cite{Mandl2005}
+
+Different algorithms
+
+\subsection{Population Diversity}
+
+Overview \cite{nsakanda2007ensuring}.
+
+Measuring:
+Entropy measure \cite{grefenstette1987incorporating} used by \cite{gupta1995minimizing}
+Standard deviation (S)
+
+\subsection{Random Numbers}
+
+rand\_r sucks
+The C99 specification \cite{C99} recommends an implementation that repeats on a $2^16$ cycle.
+The GUN C library implementation is $2^32$.
+Mersenne twister \cite{matsumoto1998mersenne} cycle $2^19937$.
+Lagged Fibonacci \cite{brent1992uniform} has cycle $2^32000$ and is 1.5 times
+the speed of MT.
+
+\section{The Problem}
+
+\subsection{Overview}
+
+Tetris has a large random component.
+Even a good strategy can be defeated quickly by an unfortunate sequence of blocks.
+
+Can we evolve a sequence of tetraminos that trains players to be good on a
+variety of random sequences?
+
+Coevolution has been used to improve game players before.
+Chinese Chess \cite{ong2007discovering}
+Checkers \cite{chellapilla1999evolving}
+Othello \cite{moriarty1995discovering}
+
+\subsection{The new individual}
+
+Types of representation.
+
+Crossover.
+
+Mutation.
+
+\section{Results}
+
+\section{Evaluation}
+
+\bibliography{../COMP6026}
+
+\end{document}
