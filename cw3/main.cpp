@@ -58,6 +58,10 @@ int main(int argc, char** argv) {
 
   Utilities::global_rng.seed(Utilities::RandomSeed());
 
+  // Statically initalise the little bastard so there's not a race condition
+  // when doing him from inside the worker threads
+  Tetramino little_bastard;
+
   if      (FLAGS_size == "5x10") Run<5,10>();
   else if (FLAGS_size == "6x12") Run<6,12>();
   else if (FLAGS_size == "7x14") Run<7,14>();

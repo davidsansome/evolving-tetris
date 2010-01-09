@@ -303,8 +303,6 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
   // Work out where to start
   int y_start = *std::min_element(
       highest_cell_.begin() + x, highest_cell_.begin() + x + size.width()) - size.height();
-  /*if (size.width() > 4 || size.height() > 4 || size.width() < 1 || size.height() < 1)
-    abort();*/
 
   if (y_start < 0)
     return y_start;
@@ -314,9 +312,6 @@ int TetrisBoard<W,H>::TetraminoHeight(const Tetramino& tetramino,
     // Check to see if any of the points on the tetramino at this position are occupied
     const Int2* point = tetramino.Points(orientation);
     for (int i=0 ; i<Tetramino::kPointsCount ; ++i) {
-      // If any point is occupied, return the previous y coord
-      /*if (point->x() < 0 || point->y() < 0 || point->x() > 3 || point->y() > 3)
-        abort();*/
       if (Cell(x + point->x(), y + point->y())) {
         return y - 1;
       }
