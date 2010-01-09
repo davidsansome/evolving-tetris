@@ -8,9 +8,14 @@
 #include <math.h>
 #include <cstdint>
 
+#include <google/gflags.h>
+
 #ifndef NO_QT_STUFF
 # include <QtDebug>
 #endif
+
+DECLARE_uint64(stopafter);
+
 
 template <typename PlayerType, typename SelectorType, typename BoardType>
 class Game {
@@ -72,7 +77,7 @@ void Game<PlayerType, SelectorType, BoardType>::Play() {
     }
 #endif
 
-    if (blocks_placed_ >= 1000000)
+    if (FLAGS_stopafter && blocks_placed_ >= FLAGS_stopafter)
       break;
   }
 }

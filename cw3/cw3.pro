@@ -10,7 +10,8 @@ SOURCES += main.cpp \
     blockselector_sequence.cpp \
     individualbase.cpp \
     gamemapper.cpp \
-    utilities.cpp
+    utilities.cpp \
+    game.cpp
 HEADERS += individual.h \
     tetrisboard.h \
     tetramino.h \

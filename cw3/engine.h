@@ -24,6 +24,7 @@ DEFINE_bool(dumpseq, false, "dump the best tetramino sequence after each generat
 DEFINE_bool(watchseq, false, "watch the best tetramino sequence after each generation");
 DEFINE_int32(watchseqdelay, 10, "delay between each move in milliseconds");
 
+DECLARE_uint64(stopafter);
 DECLARE_double(smrate);
 DECLARE_bool(sonepoint);
 DECLARE_double(pmrate);
@@ -94,21 +95,23 @@ void Engine<PlayerType, BoardType>::Run() {
 
   QThreadPool::globalInstance()->setMaxThreadCount(FLAGS_threads);
 
-  cout << "# Population size " << FLAGS_pop << endl;
-  cout << "# Games " << FLAGS_games << endl;
-  cout << "# Board size " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
-  cout << "# Mutation std dev (player weights) " << FLAGS_pwmstddev << endl;
+  cout << "# Population size: " << FLAGS_pop << endl;
+  cout << "# Games: " << FLAGS_games << endl;
+  if (FLAGS_stopafter)
+    cout << "# Stopping after: " << FLAGS_stopafter << " blocks" << endl;
+  cout << "# Board size: " << BoardType::kWidth << "x" << BoardType::kHeight << endl;
+  cout << "# Mutation std dev (player weights): " << FLAGS_pwmstddev << endl;
   if (PlayerType::HasExponents())
-    cout << "# Mutation std dev (player exponents) " << FLAGS_pemstddev << endl;
+    cout << "# Mutation std dev (player exponents): " << FLAGS_pemstddev << endl;
   if (PlayerType::HasDisplacements())
-    cout << "# Mutation std dev (player displacements) " << FLAGS_pdmstddev << endl;
-  cout << "# Mutation rate (player genes) " << FLAGS_pmrate << endl;
+    cout << "# Mutation std dev (player displacements): " << FLAGS_pdmstddev << endl;
+  cout << "# Mutation rate (player genes): " << FLAGS_pmrate << endl;
 
   cout << "# Mutation rate (block selector genes) " << FLAGS_smrate << endl;
-  cout << "# Block selector crossover " << (FLAGS_sonepoint ? "one point" : "uniform") << endl;
-  cout << "# Generations " << FLAGS_generations << endl;
-  cout << "# Threads " << FLAGS_threads << endl;
-  cout << "# Board rating function " << PlayerType::NameOfAlgorithm() << endl;
+  cout << "# Block selector crossover: " << (FLAGS_sonepoint ? "One-point" : "Uniform") << endl;
+  cout << "# Generations: " << FLAGS_generations << endl;
+  cout << "# Threads: " << FLAGS_threads << endl;
+  cout << "# Board rating function: " << PlayerType::NameOfAlgorithm() << endl;
 
 #ifndef QT_NO_DEBUG
   cout << "# Running in debug mode with assertions enabled" << endl;
