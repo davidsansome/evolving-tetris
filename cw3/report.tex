@@ -290,9 +290,45 @@ genes on the other side from the second parent.
 The goal of this evolution is to find a Tetramino sequence that, when used by
 a given player, leads to similar performance as a series of random sequences.
 
+During each generation we pair each player up with a Tetramino sequence and let
+them play one game.
+The number of blocks that a player $P$ places given a game using sequence $S$
+is denoted as $f(P, S)$.
+Like in the previous coursework, this value is also taken to be the fitness of
+that player in its population:
+
+\begin{equation}
+  f(P_i) = f(P_i, S_i)
+\end{equation}
+
+We now take each of these players and make them play $N$ new games against
+random sequences of Tetraminos - $S_r$.
+Again we record the number of blocks placed during each of these additional
+games, but this time we compare this value with the number of blocks that were
+placed in the original game.
+This tells us how similar the sequence is to a random sequence, and how fair a
+measure it is of an individual player's performance.
+
+The average distance from the sequence $S_i$ to these random games is denoted
+by $D_i$ and calculated as follows:
+
 \begin {equation}
-  f(S) = \sum_{i=1}
+  D_i = \sum_{j=1}^{N} \left| f\left( P_i, S_i\right) - f\left( P_i, S_r \right) \right|
+\end{equation}
+
+We then have to normalise this value for number of games played, as well as the
+original fitness (or else bad sequences that happened to be played by fitter
+players would end up with higher fitnesses than good sequences played by bad
+players).
+We also scale the range of values so they lie within the range $[0, 4000]$.
+This was chosen somewhat arbitrarily, but it is the same order of magnitude
+as our other fitness values.
+
+\begin{equation}
+  f(S_i) = 1000 \left( \max 0, 2 - \frac{D_i}{ N f\left( P_i, S_i\right) } \right)^2
 \end {equation}
+
+Psuedo-code for this algorithm is shown in Listing \ref{psuedocode} below.
 
 
 \begin{lstlisting}[firstnumber=1,language=c,morekeywords={until,foreach,in},frame=single,mathescape=true,caption={Pseudo-code of the algorithm used to evolve one generation},label={psuedocode},float=[htb]]
