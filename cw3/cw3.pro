@@ -52,7 +52,7 @@ QMAKE_CXXFLAGS += --std=c++0x
 
 # protobuf
 protobuf_cpp.input = PROTOBUF_SOURCES
-protobuf_cpp.output = ${QMAKE_FILE_IN_BASE}.pb.h
+protobuf_cpp.output = ${QMAKE_FILE_IN_BASE}.pb.cc
 protobuf_cpp.commands = protoc \
     --cpp_out=. \
     ${QMAKE_FILE_IN}
