@@ -203,29 +203,123 @@ incompatible when measured together.
 
 \subsection{Overview}
 
-Tetris has a large random component.
-Even a good strategy can be defeated quickly by an unfortunate sequence of blocks.
+The inherent difficulty in finding a good Tetris player is that games of
+Tetris are based around a random sequence of Tetraminos - a player that is
+successful in one game of Tetris may not be so successful in another game with
+a different sequence.
+The original coursework tackled this problem by allowing each player to play
+12 games and taking the average number of blocks placed over all the games as
+the player's fitness.
+While this does increase our confidence in the results, it is also
+computationally quite expensive.
+We would like to be able to find a single non-random sequence of Tetraminos
+that can be used to train our algorithm.
 
-Can we evolve a sequence of tetraminos that trains players to be good on a
-variety of random sequences?
+The question therefore, is:
 
-Coevolution has been used to improve game players before.
-Chinese Chess \cite{ong2007discovering}
-Checkers \cite{chellapilla1999evolving}
-Othello \cite{moriarty1995discovering}
+\begin{quote}
+  Can we evolve a sequence of tetraminos that trains players to be good on a
+  variety of random sequences?
+\end{quote}
+
+Using coevolution to evolve the tetramino sequence seems like an appropriate
+strategy.
+Coevolution has been used in the literature to improve the performance of
+players in other similar games, including Chinese Chess
+\cite{ong2007discovering}, Checkers \cite{chellapilla1999evolving} and
+Othello \cite{moriarty1995discovering}.
+These games all require two players, and so the algorithms use competitive
+coevolution to play two players off against each other - the winner is given a
+higher fitness and the loser a lower fitness.
+Tetris is a single player game so we cannot use the same approach, instead we
+shall introduce a second population of Tetramino sequences and assign fitness
+values to them based on their similarity to a good ``random'' sequence.
 
 \subsection{The new individual}
 
-Types of representation.
--a ﬁnite state automaton
+There are a number of different representations we can use for a sequence of
+Tetraminos:
 
-Crossover.
+\begin{enumerate}
+  \item \emph{Random seed} - the individual would hold a single gene containing
+      the seed for a deterministic pseudo-random number generator.
+      Each generated number would represent a single Tetramino dropped onto the
+      board.
+      While this would require the smallest possible storage space, it would be
+      impossible to evolve or mutate, as the smallest change to the seed would
+      result in an entirely different sequence of random numbers.
+  \item \emph{Small repeating sequence} - the individual would contain a short
+      fixed-size sequence of Tetraminos which would be ``rewound'' and used
+      again when they had been exhausted.
+      This representation lends itself well to manipulation by crossover and
+      mutation operators, but could lead to biased games of Tetris.
+      A strategy that effectively cleared the sequence the first time it
+      appeared would be able to do exactly the same thing next time the
+      sequence was produced, and games would be artifically lengthened.
+      This problem is the same as that of a psuedo-random number generator with
+      a short cycle.
+  \item \emph{Exhaustive sequence} - the individual would contain an infinite
+      sequence of Tetraminos.
+      Obviously we cannot really store an infinite sequence, so this would be
+      identical to a very large \emph{small repeating sequence} that didn't
+      repeat.
+      Storing 1,000,000 tetramino values takes approximately 1MB of memory and
+      still has acceptable performance when mutating and reproducing.
+  \item \emph{Markov chain} - each \emph{state} in the Markov chain would
+      represent the emission of one Tetramino, and the probabilities of moving
+      between states would make up the individual's genes.
+      High order Markov chains would likely give more structure to the
+      Tetramino sequences.
+      Hoogeboom and Kosters \cite{hoogeboom2004tetris} use finite state
+      automata to generate sequences of Tetraminos in their research on
+      decidability.
+\end{enumerate}
 
-Mutation.
+We chose to use the \emph{exhaustive sequence} representation as it is
+straightforward and can be easily evolved.
+The mutation operator has a probability $p$ of replacing a Tetramino in the
+sequence with a new randomly selected Tetramino.
+Two crossover operators were evaluated - the uniform crossover operator would
+randomly select genes from the two parents with equal probability.
+The one-point crossover operator would randomly select a point in the Tetramino
+sequence and take genes on one side of that point from the first parent and
+genes on the other side from the second parent.
+
+\subsection{Fitness function}
+
+The goal of this evolution is to find a Tetramino sequence that, when used by
+a given player, leads to similar performance as a series of random sequences.
+
+\begin {equation}
+  f(S) = \sum_{i=1}
+\end {equation}
+
+
+\begin{lstlisting}[firstnumber=1,language=c,morekeywords={until,foreach,in},frame=single,mathescape=true,caption={Pseudo-code of the algorithm used to evolve one generation},label={psuedocode},float=[htb]]
+for 0 $\leq$ i $<$ population.size
+  // One member from the player population plays a game with one member
+  // from the sequence population.
+  blocks_placed = PlayGame(player[i], sequence[i])
+  player[i].fitness = blocks_placed
+  
+  // The same player now plays games against random sequences
+  random_fitness = 0
+  for 0 $\leq$ game $<$ kNumberOfGames
+    random_fitness += abs(blocks_placed - PlayGame(player[i], RandomSequence()))
+  random_fitness /= kNumberOfGames
+  
+  // The sequence's fitness is derived from how similar it was
+  // to the random games
+  sequence[i].fitness = Normalise(random_fitness)
+\end{lstlisting}
 
 \section{Results}
 
 \section{Evaluation}
+
+Future work:
+Markov chains.
+Block based crossover of tetramino sequences.
 
 \bibliography{../COMP6026}
 
