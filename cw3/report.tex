@@ -38,6 +38,8 @@
    \renewcommand{\headrulewidth}{0pt} % and the line
 }
 
+\newcounter{savedcounter}
+
 %opening
 \title{COMP6026 Assignment 3 \\
 Coevolving an ideal Tetris trainer}
@@ -59,28 +61,143 @@ Coevolving an ideal Tetris trainer}
 
 \section{Technical Improvements}
 
-\subsection{Things from the original paper}
+\subsection{Tetris players}
 
-Board rating criteria \cite{Mandl2005}
+The first part of this coursework described an algorithm to evolve a Tetris
+player.
+Each individual player in the population used a different board-rating function
+to choose the best move to make at each stage of the game.
+The player's decision was based on six criteria:
 
-Different algorithms
+\begin{enumerate}
+  \item \emph{Pile Height}: The total height of the Tetris board, measured from
+      the bottom of the board to the highest occupied cell.
+  \item \emph{Holes}: The number of unoccupied cells that have at least one
+      occupied cell above them.
+  \item \emph{Connected Holes}: Same as \emph{Holes}, except vertically
+      connected unoccupied cells only count as one connected hole.
+  \item \emph{Removed Lines}: The number of lines that were cleared in the last
+      step to get to the current board.
+  \item \emph{Altitude Difference}: The difference between the highest occupied
+      cell and the lowest free cell that is directly reachable from the top.
+  \item \emph{Maximum Well Depth}: The depth of the deepest well on the board.
+      A well is a vertical group of unoccupied cells with a width of one,
+      reachable from the top and with other filled cells on both sides.
+  \setcounter{savedcounter}{\theenumi}
+\end{enumerate}
 
-\subsection{Population Diversity}
+This coursework extends the board-rating function by adding the additional six
+criteria used by Mandl \cite{Mandl2005}:
 
-Overview \cite{nsakanda2007ensuring}.
+\begin{enumerate}
+  \setcounter{enumi}{\thesavedcounter}
+  \item \emph{Sum of all Wells}: Sum of the depths of all the wells on the board.
+  \item \emph{Landing Height}: The height at which the last Tetramino was placed.
+  \item \emph{Blocks}: The total number of occupied cells currently on the board.
+  \item \emph{Weighted Blocks}: Same as \emph{Blocks} above, but each occupied
+      cell at height $n$ from the bottom of the board counts for $n$.
+  \item \emph{Row Transitions}: The sum of all horizontal occupied/unoccupied
+      transitions across the board.
+      The area outside the board counts as occupied.
+  \item \emph{Column Transitions}: The sum of all vertical occupied/unoccupied
+      transitions across the board.
+      The area above the board counts as unoccupied, and the area below the
+      board counts as occupied.
+\end{enumerate}
 
-Measuring:
-Entropy measure \cite{grefenstette1987incorporating} used by \cite{gupta1995minimizing}
-Standard deviation (S)
+Two additional board rating functions were also implemented.
+The previous coursework exclusively used a linear rating function $R_l(b)$
+shown in Equation \ref{LinearRating} below, but here we have added the two
+other rating functions described in Mandl's paper.
+These are the exponential function $R_e(b)$ and the exponential-displacement
+function $R_d(b)$.
 
-\subsection{Random Numbers}
 
-rand\_r sucks
-The C99 specification \cite{C99} recommends an implementation that repeats on a $2^16$ cycle.
-The GUN C library implementation is $2^32$.
-Mersenne twister \cite{matsumoto1998mersenne} cycle $2^19937$.
-Lagged Fibonacci \cite{brent1992uniform} has cycle $2^32000$ and is 1.5 times
-the speed of MT.
+\begin{equation}
+\label{LinearRating}
+  R_l(b) = \sum^6_{i=1} w_ir_i(b)
+\end{equation}
+
+\begin{equation}
+\label{ExponentialRating}
+  R_e(b) = \sum^6_{i=1} w_ir_i(b)^{e_i}
+\end{equation}
+
+\begin{equation}
+\label{DisplacementRating}
+  R_d(b) = \sum^6_{i=1} w_i \lvert r_i(b) - d_i \rvert ^{e_i}
+\end{equation}
+
+These functions add some more genes to the individual - the set of exponents
+$e$ and the set of displacements $d$.
+Both these sets contain real-valued numbers and are the same size as the set of
+weights $w$ used in the original individual.
+When initially seeding the player population with individuals we chose integer
+values for the weights randomly from the range $-1000 \cdots 1000$.
+Similarly we choose random real numbers for the exponents from the range
+$-2.0 \cdots 2.0$, and displacements from $-10.0 \cdots 10.0$.
+
+\subsection{Random numbers}
+
+The previous coursework generated pseudo-random numbers by calling the
+\emph{rand\_r()} C library function.
+The implementation of \emph{rand\_r()} suggested in the C99 specification
+\cite{C99} uses a 16-bit seed and is well known for its poor statistical
+properties and small cycle especially in the low-order bits.
+The implementation in the GNU C library is slightly better, as it uses a 32-bit
+seed, but still suffers from the same problems.
+
+We make use of random numbers in almost every part of this project, and the
+reliability of our results depends on these numbers being unpredictable and with
+a very high cycle.
+Because we generate so many random numbers it is also advantageous for the
+psuedo-random number generator to be fast (\emph{rand\_r()} is very slow).
+
+The Mersenne Twister \cite{matsumoto1998mersenne} generator has a cycle of
+$2^{19937}$ (compared to \emph{rand\_r()}'s $2^{32}$) and is generally regarded as
+being the most suitable general-purpose generator.
+However we chose to use a Lagged Fibonacci \cite{brent1992uniform} generator
+with parameters $p=607$, $q=273$.
+This generator has a faster execution time than Mersenne Twister and repeats in
+a cycle of $2^{32000}$, however this comes at the cost of increased state (4.7kb
+instead of 2.5kb).
+
+The implementations from the Boost Random Number
+Library\footnote{\url{http://www.boost.org}} were used.
+
+\subsection{Population diversity}
+
+In a long running evolution it is possible for the individuals to become
+genetically very similar to each other as the least fit ones are eliminated and
+the fittest reproduce amongst themselves.
+Diversity in the population is required to ensure that the algorithm does not
+``home in'' on a local minimum without any chance of jumping away.
+
+We would like to measure the diversity of the genes within chromosomes (weights,
+exponents and displacements) in our Tetris player population.
+This measure can then be used to decide whether it is necessary to introduce
+fresh, random individuals into the population.
+
+Nsakanda et al.\ \cite{nsakanda2007ensuring} provide an overview of the common
+ways of measuring population diversity in genetic algorithms, including the
+entropy measure suggested by Grenfenstette \cite{grefenstette1987incorporating}.
+Burke et al.\ \cite{burke2003advanced} compare a selection of more advanced
+population diversity measures.
+
+For this project we decided to settle on a more straightforward way of measuring
+diversity: standard deviation.
+If we take the value of the $j^\textrm{th}$ gene from individual $i$ to be
+$g_{ij}$, then the diversity of the population can be measured as:
+
+\begin{equation}
+  D = \sum_{i=1}^{n_p} \frac{\sqrt{\frac{\sum_{j=1}^{n_g} (g_{ij} - \overline{g_i})^2 }{n_g}} }{n_p}
+\end{equation}
+
+Where $n_p$ is the number of individuals in the population, and $n_g$ is the
+number of genes composing each individual.
+The diversity was of course measured seperately for each chromosome as the
+genes in different chromosomes have different precisions and ranges and would be
+incompatible when measured together.
 
 \section{The Problem}
 
@@ -100,6 +217,7 @@ Othello \cite{moriarty1995discovering}
 \subsection{The new individual}
 
 Types of representation.
+-a ﬁnite state automaton
 
 Crossover.
 
