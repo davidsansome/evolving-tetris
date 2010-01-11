@@ -42,7 +42,7 @@
 
 %opening
 \title{COMP6026 Assignment 3 \\
-Coevolving an ideal Tetris trainer}
+Coevolving an Ideal Tetris Trainer}
 \author{David Sansome $<$ds505$>$}
 
 \begin{document}
@@ -51,9 +51,21 @@ Coevolving an ideal Tetris trainer}
 \maketitle
 
 \begin{abstract}
-
-
-
+  It can sometimes be computationally very expensive to reliably evaluate the
+  fitness of an individual when its success depends on sequences of random
+  events.
+  It becomes necessary to evaluate the individual a number of times so that an
+  average can be taken and used as the individual's overall fitness.
+  
+  This report attempts to evolve an ideal sequence of Tetris pieces that can be
+  used as a fair test when evaluating the fitness of a Tetris player.
+  Using this one ideal sequence instead of a series of random sequences will
+  reduce the computation time required to evolve better Tetris players.
+  
+  Our results show that coevolving Tetris players against Tetramino sequences
+  can produce a small improvement in the fitness of the resulting players, but
+  further investigation is be required to determine whether this small change
+  is just a statistical anomaly.
 \end{abstract}
 
 \clearpage
@@ -64,7 +76,7 @@ Coevolving an ideal Tetris trainer}
 \subsection{Tetris players}
 \label{players}
 
-The first part of this coursework described an algorithm to evolve a Tetris
+The first part of this assignment described an algorithm to evolve a Tetris
 player.
 Each individual player in the population used a different board-rating function
 to choose the best move to make at each stage of the game.
@@ -87,7 +99,7 @@ The player's decision was based on six criteria:
   \setcounter{savedcounter}{\theenumi}
 \end{enumerate}
 
-This coursework extends the board-rating function by adding the additional six
+This assignment extends the board-rating function by adding the additional six
 criteria used by Mandl \cite{Mandl2005}:
 
 \begin{enumerate}
@@ -107,7 +119,7 @@ criteria used by Mandl \cite{Mandl2005}:
 \end{enumerate}
 
 Two additional board rating functions were also implemented.
-The previous coursework exclusively used a linear rating function $R_l(b)$
+The previous assignment exclusively used a linear rating function $R_l(b)$
 shown in Equation \ref{LinearRating} below, but here we have added the two
 other rating functions described in Mandl's paper.
 These are the exponential function $R_e(b)$ and the exponential-displacement
@@ -140,7 +152,7 @@ $-2.0 \cdots 2.0$, and displacements from $-10.0 \cdots 10.0$.
 
 \subsection{Random numbers}
 
-The previous coursework generated pseudo-random numbers by calling the
+The previous assignment generated pseudo-random numbers by calling the
 \emph{rand\_r()} C library function.
 The implementation of \emph{rand\_r()} suggested in the C99 specification
 \cite{C99} uses a 16-bit seed and is well known for its poor statistical
@@ -208,7 +220,7 @@ The inherent difficulty in finding a good Tetris player is that games of
 Tetris are based around a random sequence of Tetraminos - a player that is
 successful in one game of Tetris may not be so successful in another game with
 a different sequence.
-The original coursework tackled this problem by allowing each player to play
+The original assignment tackled this problem by allowing each player to play
 12 games and taking the average number of blocks placed over all the games as
 the player's fitness.
 While this does increase our confidence in the results, it is also
@@ -296,7 +308,7 @@ During each generation we pair each player up with a Tetramino sequence and let
 them play one game.
 The number of blocks that a player $P$ places given a game using sequence $S$
 is denoted as $f(P, S)$.
-Like in the previous coursework, this value is also taken to be the fitness of
+Like in the previous assignment, this value is also taken to be the fitness of
 that player in its population:
 
 \begin{equation}
@@ -357,7 +369,7 @@ for 0 $\leq$ i $<$ population.size
 
 The technical modifications to the Tetris players led to the biggest
 improvements in fitness.
-By the end of the previous coursework the very best Tetris players could place
+By the end of the previous assignment the very best Tetris players could place
 around 2-3 thousand blocks over the course of a game.
 After adding the remaining six board rating criteria discussed in Section
 \ref{players} the performance increased by an order of magnitude, and the best
