@@ -62,6 +62,7 @@ Coevolving an ideal Tetris trainer}
 \section{Technical Improvements}
 
 \subsection{Tetris players}
+\label{players}
 
 The first part of this coursework described an algorithm to evolve a Tetris
 player.
@@ -350,6 +351,94 @@ for 0 $\leq$ i $<$ population.size
 \end{lstlisting}
 
 \section{Results}
+
+\subsection{Technical improvements}
+
+The technical modifications to the Tetris players led to the biggest
+improvements in fitness.
+By the end of the previous coursework the very best Tetris players could place
+around 2-3 thousand blocks over the course of a game.
+After adding the remaining six board rating criteria discussed in Section
+\ref{players} the performance increased by an order of magnitude, and the best
+players were now able to place 20,000 blocks easily, sometimes reaching 50,000
+and above.
+
+Figure \ref{LinearNoCoev} shows how the mean fitness of the player population
+increases over time.
+
+\begin{figure}[h]
+  \label{LinearNoCoev}
+  \centering
+  \includegraphics[width=13cm]{results/linear-no-coev.png}
+  \caption{Mean player fitness over time from 10 different executions.}
+\end{figure}
+
+Adding in the exponential rating function has not been as useful, and actually
+gives worse performance than the linear rating function.
+This is possibly due to larger search space - it is more difficult for the
+algorithm to find a suitable set of parameters.
+
+A comparison of the changes is given in the table below.
+
+\begin{center}
+  \begin{tabular}{l l l l}
+    \hline
+     & Max & Mean & Lowest \\
+    \hline
+    First six board criteria & 2145 & 599 & 128 \\
+    All twelve board criteria & 58382 & 4605 & 108 \\
+    Exponential rating function & 16330 & 2332 & 116 \\
+    
+  \end{tabular}
+\end{center}
+
+\subsection{Population diversity}
+
+Measuring the standard deviation of player chromosomes has revealed some
+interesting results.
+While the diversity of the \emph{weights} chromosome decreases initially, it
+always seems to level off and sometimes increase again at around the
+20-generation point.
+Decreasing diversity is of course expected as the population gains fitness
+because all the initial random low-fitness players are being eliminated.
+However the increase again is curious, and suggests that our mutation rate is
+sufficient (or even too high?) to maintain diversity in the population.
+
+\newcommand{\smallgraphwidth}{7cm}
+\begin{figure}[h]
+  \centering
+  \subfloat[Weights]{\label{stddev-w}\includegraphics[width=\smallgraphwidth]{results/linear-stddev.png}}
+  \qquad
+  \subfloat[Exponents]{\label{stddev-e}\includegraphics[width=\smallgraphwidth]{results/exponential-stddev.png}}
+
+  \caption{Comparing the standard deviation of chromosome values to player
+      fitness.
+      The blue line is player fitness and the red line is standard deviation
+      of the measured chromosome.}
+  \label{stddev}
+\end{figure}
+
+The \emph{exponent} chromosome loses diversity very rapidly, usually ending up
+having a standard deviation of around 0.3.
+Maybe this means a higher mutation rate is required for the exponent values, or
+maybe the diversity needs to be maintained by adding new random individuals
+occasionally.
+
+\subsection{Coevolution}
+
+\newcommand{\smallgraphwidth}{7cm}
+\begin{figure}[h]
+  \centering
+  \subfloat[Weights]{\label{stddev-w}\includegraphics[width=\smallgraphwidth]{results/linear-coev.png}}
+  \qquad
+  \subfloat[Exponents]{\label{stddev-e}\includegraphics[width=\smallgraphwidth]{results/linear-coev-vs-no-coev.png}}
+
+  \caption{Comparing the standard deviation of chromosome values to player
+      fitness.
+      The blue line is player fitness and the red line is standard deviation
+      of the measured chromosome.}
+  \label{stddev}
+\end{figure}
 
 \section{Evaluation}
 
