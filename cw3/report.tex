@@ -164,7 +164,7 @@ We make use of random numbers in almost every part of this project, and the
 reliability of our results depends on these numbers being unpredictable and with
 a very high cycle.
 Because we generate so many random numbers it is also advantageous for the
-psuedo-random number generator to be fast (\emph{rand\_r()} is very slow).
+pseudo-random number generator to be fast (\emph{rand\_r()} is very slow).
 
 The Mersenne Twister \cite{matsumoto1998mersenne} generator has a cycle of
 $2^{19937}$ (compared to \emph{rand\_r()}'s $2^{32}$) and is generally regarded as
@@ -208,7 +208,7 @@ $g_{ij}$, then the diversity of the population can be measured as:
 
 Where $n_p$ is the number of individuals in the population, and $n_g$ is the
 number of genes composing each individual.
-The diversity was of course measured seperately for each chromosome as the
+The diversity was of course measured separately for each chromosome as the
 genes in different chromosomes have different precisions and ranges and would be
 incompatible when measured together.
 
@@ -269,8 +269,8 @@ Tetraminos:
       mutation operators, but could lead to biased games of Tetris.
       A strategy that effectively cleared the sequence the first time it
       appeared would be able to do exactly the same thing next time the
-      sequence was produced, and games would be artifically lengthened.
-      This problem is the same as that of a psuedo-random number generator with
+      sequence was produced, and games would be artificially lengthened.
+      This problem is the same as that of a pseudo-random number generator with
       a short cycle.
   \item \emph{Exhaustive sequence} - the individual would contain an infinite
       sequence of Tetraminos.
@@ -342,7 +342,7 @@ as our other fitness values.
   f(S_i) = 1000 \left( \max 0, 2 - \frac{D_i}{ N f\left( P_i, S_i\right) } \right)^2
 \end {equation}
 
-Psuedo-code for this algorithm is shown in Listing \ref{psuedocode} below.
+Pseudo-code for this algorithm is shown in Listing \ref{psuedocode} below.
 
 
 \begin{lstlisting}[firstnumber=1,language=c,morekeywords={until,foreach,in},frame=single,mathescape=true,caption={Pseudo-code of the algorithm used to evolve one generation},label={psuedocode},float=[htb]]
