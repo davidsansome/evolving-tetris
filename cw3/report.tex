@@ -241,6 +241,7 @@ values to them based on their similarity to a good ``random'' sequence.
 There are a number of different representations we can use for a sequence of
 Tetraminos:
 
+\label{individualtype}
 \begin{enumerate}
   \item \emph{Random seed} - the individual would hold a single gene containing
       the seed for a deterministic pseudo-random number generator.
@@ -457,12 +458,70 @@ in performance can just as easily be explained by random chance - it is
 possible that the players in the five runs against evolving sequences just
 happened to be more lucky.
 
-\section{Evaluation}
+To be sure that coevolution actually helped improve the player performance we
+would need to run more tests each lasting for more generations.
+Also it would be useful to try evolving the sequence for longer, artificially
+slowing the evolution of the players by introducing new random players into the
+population or increasing their mutation rate.
+It would be interesting to see how a fresh population of players coped with a
+population of sequences that had already been evolved.
 
-Future work:
-Markov chains.
-Block based crossover of tetramino sequences.
+Sadly there was not enough time to try any of these extra tests.
 
+\section{Future Work}
+
+The representation of Tetramino sequences as evolvable units is currently quite
+basic, and there are a number of changes that could be made to make them better
+at finding the perfect training sequence:
+
+\begin{enumerate}
+  \item Uniform crossover and one-point crossover are currently used when
+      forming a new sequence individual.
+      The fixed sequence representation detailed in Section \ref{individualtype}
+      seems perfect for a more \textbf{sophisticated crossover operator}
+      that takes small (10-20) Tetramino sequences from each parent.
+      Adjacent genes in the Tetramino sequence are naturally related, as
+      success in Tetris is dependent on having complimentary Tetraminos
+      appearing sequentially.
+  \item The idea of using a \textbf{Markov chain} representation for the
+      sequence individuals mentioned in Section \ref{individualtype} was never
+      attempted.
+      It would be interesting to try this, as perhaps different strategies
+      would develop if there was some pattern to the Tetraminos being dropped
+      as opposed to their selection being seemingly random.
+      The new mutation operator would change the state transition probabilities
+      of the Markov chain, and would therefore have more of a direct and
+      deterministic change on the pattern than the current operator that simply
+      changes the occasional block in the sequence.
+\end{enumerate}
+
+\clearpage
 \bibliography{../COMP6026}
+
+\appendix
+\clearpage
+\section{Sequence visualisation}
+
+\begin{figure}[h]
+  \label{Sequence}
+  \centering
+  \includegraphics[width=13cm]{results/sequence.png}
+\end{figure}
+
+If you render each Tetramino in a sequence as a single coloured
+pixel (red is the square, green is the line piece, blue is the squiggly,
+etc.) then it looks something like this.
+This can be useful as a quick visual check that the sequence is mostly
+random.
+I tried to use Dieharder\footnote{\url{http://www.phy.duke.edu/~rgb/General/dieharder.php}}
+(a random number test suite) to perform various statistical tests on the
+generated sequences, but it doesn't seem to work well with small ranges of
+values.
+
+\section{Source code}
+\begin{center}
+ \includegraphics[width=12cm,height=12cm]{cd.png}
+\end{center}
+
 
 \end{document}
