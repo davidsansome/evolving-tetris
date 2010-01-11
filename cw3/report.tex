@@ -426,19 +426,36 @@ occasionally.
 
 \subsection{Coevolution}
 
-\newcommand{\smallgraphwidth}{7cm}
-\begin{figure}[h]
-  \centering
-  \subfloat[Weights]{\label{stddev-w}\includegraphics[width=\smallgraphwidth]{results/linear-coev.png}}
-  \qquad
-  \subfloat[Exponents]{\label{stddev-e}\includegraphics[width=\smallgraphwidth]{results/linear-coev-vs-no-coev.png}}
+Figure \ref{LinearCoev} below shows the difference in performance between games
+in which the player population plays an evolving population of Tetramino
+sequences, and games in which the player population plays random sequences.
+We would expect individuals playing with the evolving sequences to get better
+than their random-playing counterparts over time as the sequences evolve to
+become more ``fair''.
 
-  \caption{Comparing the standard deviation of chromosome values to player
-      fitness.
-      The blue line is player fitness and the red line is standard deviation
-      of the measured chromosome.}
-  \label{stddev}
+This does indeed happen, although the change in performance is small.
+Players playing against the evolving sequences finish with fitnesses between
+3400 and 5201, and players playing random sequences finish slightly lower
+between 2200 and 4600.
+
+\clearpage
+
+\begin{figure}[h]
+  \label{LinearCoev}
+  \centering
+  \includegraphics[width=13cm]{results/linear-coev-vs-no-coev.png}
+  \caption{Comparison of player performance with and without coevolution.
+      Feint lines show the performance over time of 10 runs - five (blue) in which
+      the player population played against an evolving population of Tetramino
+      sequences, and five (red) in which the players played against random
+      sequences.
+      Strong straight lines are trendlines for the average of the five games.}
 \end{figure}
+
+It is quite difficult to draw conclusions from these results, as the difference
+in performance can just as easily be explained by random chance - it is
+possible that the players in the five runs against evolving sequences just
+happened to be more lucky.
 
 \section{Evaluation}
 
