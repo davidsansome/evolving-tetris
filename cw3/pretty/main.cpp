@@ -4,6 +4,8 @@
 #include <QtDebug>
 #include <QLabel>
 
+#include <cmath>
+
 static const QRgb colors[] = {
   qRgb(255, 0, 0),
   qRgb(0, 255, 0),
@@ -17,36 +19,34 @@ static const QRgb colors[] = {
 int main(int argc, char** argv) {
   QApplication a(argc, argv);
 
-  QFile file("foo");
+  QFile file(argv[1]);
   file.open(QIODevice::ReadOnly);
   QDataStream s(&file);
 
-  QImage image(1000, 1000, QImage::Format_ARGB32);
+  const int size = sqrt(file.size()) + 1;
+
+  QImage image(size, size, QImage::Format_ARGB32);
+  image.fill(Qt::white);
 
   QRgb* p = reinterpret_cast<QRgb*>(image.bits());
   quint8 c;
   while (!s.atEnd()) {
     s >> c;
+    if (c == '\n' || c == '\r')
+      break;
+
+    c -= '0';
+    Q_ASSERT(c < 7);
     *p = colors[c];
     p++;
   }
+
+  image.save("image.png");
 
   QLabel label;
   label.setPixmap(QPixmap::fromImage(image));
   label.setWindowTitle("File");
   label.show();
-
-  QImage image2(1000, 1000, QImage::Format_ARGB32);
-  p = reinterpret_cast<QRgb*>(image2.bits());
-  for (int i=0 ; i<1000000 ; ++i) {
-    *p = colors[qrand() % 7];
-    p++;
-  }
-
-  QLabel label2;
-  label2.setPixmap(QPixmap::fromImage(image2));
-  label2.setWindowTitle("Random");
-  label2.show();
 
   return a.exec();
 }
